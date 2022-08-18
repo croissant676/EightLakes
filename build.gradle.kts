@@ -22,7 +22,11 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.11")
     implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.6.1")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+    implementation("net.axay:simplekotlinmail-core:1.4.0")
+    implementation("net.axay:simplekotlinmail-client:1.4.0")
+    implementation("net.axay:simplekotlinmail-html:1.4.0")
     testImplementation(kotlin("test"))
+    testImplementation("io.kotest:kotest-runner-junit5:5.4.1")
 }
 
 tasks.test {
@@ -30,7 +34,9 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions {
+        jvmTarget = "11"
+    }
 }
 
 allprojects {

@@ -1,22 +1,28 @@
 package dev.kason.slhsdb
 
-import dev.kason.slhsdb.students.userModule
+import dev.kason.slhsdb.core.registerMailer
+import dev.kason.slhsdb.disc.addRegistrationCommand
 import dev.kord.core.Kord
-import dev.kord.gateway.Intent
+import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
+import org.litote.kmongo.coroutine.coroutine
+import org.litote.kmongo.reactivestreams.KMongo
+
+val database = KMongo.createClient().coroutine.getDatabase("slhs")
 
 lateinit var kord: Kord
     private set
 
 suspend fun main() {
     kord = Kord(System.getProperty("kord.token"))
-    userModule()
+    registerCommandSorter()
+    registerMailer()
+    addRegistrationCommand()
     kord.login {
         @OptIn(PrivilegedIntent::class)
-        intents += Intent.MessageContent
+        intents += Intents.all
+        presence {
+            watching("students struggle")
+        }
     }
-}
-
-suspend fun ping() {
-
 }
