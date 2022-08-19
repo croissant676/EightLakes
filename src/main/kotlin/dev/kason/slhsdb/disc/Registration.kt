@@ -19,10 +19,10 @@ suspend fun addRegistrationCommand() {
         "signup",
         "Registers you into the system with the given information. You can edit the information later."
     ) {
-        string("id", "Your student ID. Please capitalize the first letter.") {
+        string("id", "Your student ID. Please capitalize the first letter") {
             required = true
         }
-        string("first", "Your first name as it would appear on your schedule.") {
+        string("first", "Your first name as it would appear on your schedule") {
             required = true
         }
         string("last", "Your last name as it would appear on your schedule") {
@@ -54,6 +54,7 @@ suspend fun addRegistrationCommand() {
                 content = when (studentRegistrationError) {
                     StudentRegistrationError.AccountRegistered -> "You are already registered!"
                     StudentRegistrationError.StudentNameAlreadyExists -> "A student with the same first, middle, and last name as you has already exists."
+                    StudentRegistrationError.StudentCodeInvalid -> "The inputted student code is invalid."
                     StudentRegistrationError.StudentCodeAlreadyExists -> "A student with the same student id is already registered."
                 }
             }
