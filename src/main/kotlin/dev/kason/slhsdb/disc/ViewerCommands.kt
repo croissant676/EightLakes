@@ -18,7 +18,7 @@ suspend fun addViewerCommands() {
     kord.createGuildChatInputCommand(
         guildId,
         name = "course",
-        description = ""
+        description = "see course"
     ) {
         string("name", "The name of the course. ") {
             courseDatabase.find().toList().forEach {
@@ -78,11 +78,10 @@ suspend fun addViewerCommands() {
         description = "Change personal settings"
     ) {
         string("setting", "Setting to change") {
-
             required = true
         }
     }.onExecute {
-
+        print("hi")
     }
 
     //profile
@@ -96,7 +95,7 @@ suspend fun addViewerCommands() {
             response.respond {
                 embed {
                     title = "${it.firstName}\'s Profile"
-                    description = it.botData.description
+                    description = it.settings.description
                     color = interaction.user.roles.first().color
                     thumbnail {
                         url = interaction.user.avatar?.url ?: interaction.user.defaultAvatar.url

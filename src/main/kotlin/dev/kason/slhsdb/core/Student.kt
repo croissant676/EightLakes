@@ -49,4 +49,11 @@ data class StudentBotData(
     var userJoinValue: Int? = null,
 )
 
+val defaultSettings: MutableMap<String, Boolean> = mutableMapOf(
+    "enabledDailyReminders" to false,
+    "enabledBirthdayPings" to true
+)
+
+
+
 suspend fun student(discordId: Snowflake) = studentDatabase.findOne(Student::discordId eq discordId)

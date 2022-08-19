@@ -4,6 +4,7 @@ import dev.kason.slhsdb.core.registerMailer
 import dev.kason.slhsdb.disc.addRegistrationCommand
 import dev.kason.slhsdb.disc.addVerificationCommand
 import dev.kason.slhsdb.disc.addVerifiedRole
+import dev.kason.slhsdb.disc.addViewerCommands
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.gateway.Intents
@@ -24,7 +25,7 @@ suspend fun main() {
     registerMailer()
     addRegistrationCommand()
     addVerificationCommand()
-
+    addViewerCommands()
     kord.login {
         @OptIn(PrivilegedIntent::class)
         intents += Intents.all
@@ -32,5 +33,5 @@ suspend fun main() {
             watching("students struggle")
         }
     }
-    //test
+
 }

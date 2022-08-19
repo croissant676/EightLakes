@@ -5,8 +5,7 @@ import dev.kord.core.entity.application.ApplicationCommand
 import dev.kord.core.event.interaction.GuildChatInputCommandInteractionCreateEvent
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
-import dev.kord.gateway.Intent
-import dev.kord.gateway.PrivilegedIntent
+import kotlinx.coroutines.flow.first
 
 typealias CommandExecution = suspend GuildChatInputCommandInteractionCreateEvent.() -> Unit
 
@@ -36,9 +35,18 @@ suspend fun checkGuildSaveUsed() {
     kord.on<MessageCreateEvent> {
         if (message.author?.isBot) return@on
         if ("guild save" !in message.content) return@on
+        val offender = message.mentionedUsers.first()
 
-        // all clear, give them the pong!
-        message.channel.createMessage("pong!")
+        /*
+        message.channel.asChannel()
+        message.channel.asChannel().data
+        message.getChannel().asChannelOf<TopGuildChannel>().addOverwrite(overwrite = PermissionOverwrite(
+            PermissionOverwriteData(message.author!!.id, OverwriteType.Member, denied = Permissions(
+                permissions =
+            ), allowed = Permissions())
+        ), "L counting")
+
+         */
     }
 
     kord.login {

@@ -21,7 +21,7 @@ suspend fun registerStudent(
         studentDatabase.findOne(Student::middleName eq middleName) != null &&
         studentDatabase.findOne(Student::lastName eq lastName) != null
     )   return Either.Left(StudentRegistrationError.StudentNameAlreadyExists)
-    else if ("[A-z]\\d{7}".toRegex().matches(studentCode))
+    else if (!"[A-z]\\d{7}".toRegex().matches(studentCode))
         return Either.Left(StudentRegistrationError.StudentCodeInvalid)
     else if (studentDatabase.findOne(Student::studentCode eq studentCode) != null) {
         return Either.Left(StudentRegistrationError.StudentCodeAlreadyExists)
