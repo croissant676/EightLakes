@@ -35,7 +35,7 @@ fun registerMailer() {
     }
 }
 
-suspend fun EmailPopulatingBuilder.useUsername(): EmailPopulatingBuilder {
+fun EmailPopulatingBuilder.useUsername(): EmailPopulatingBuilder {
     if (username == null) registerMailer()
     return from(username!!)
 }
@@ -65,7 +65,7 @@ suspend fun verification(
     preferredName: String?
 ): Verification {
     val verification = Verification(
-        token = random.nextBytes(15).encodeBase64Url(),
+        token = random.nextBytes(24).encodeBase64Url(),
         discordId = discordId,
         firstName = firstName,
         middleName = middleName,
@@ -91,7 +91,7 @@ suspend fun finish(token: String, discordMessenger: Snowflake): Either<String, S
         return Either.Left("Please use the same discord account you used to register.")
     }
     if (verification.expirationDate < Clock.System.now()) {
-        return Either.Left("Verification has expired already.")
+        return Either.Left("Your verification has expired already.")
     }
     val student = Student(
         discordId = verification.discordId,

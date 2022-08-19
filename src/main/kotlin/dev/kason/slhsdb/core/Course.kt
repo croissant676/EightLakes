@@ -16,6 +16,7 @@ class Course(
     val students: MutableList<StudentCourse> = mutableListOf(),
     var courseType: CourseType? = null,
     var channel: Snowflake? = null,
+    val assignments: MutableList<Base64Id> = mutableListOf()
 )
 
 val courseDatabase = database.getCollection<Course>()
@@ -38,6 +39,17 @@ enum class Period {
             3 -> "3rd"
             else -> "${number}th"
         }
+}
+
+fun parsePeriod(inputString: String): Period = when (inputString) {
+    "1st" -> Period.FirstPeriod
+    "2nd" -> Period.SecondPeriod
+    "3rd" -> Period.ThirdPeriod
+    "4th" -> Period.FourthPeriod
+    "5th" -> Period.FifthPeriod
+    "6th" -> Period.SixthPeriod
+    "7th" -> Period.SeventhPeriod
+    else -> throw IllegalStateException()
 }
 
 @kotlinx.serialization.Serializable
@@ -67,7 +79,7 @@ class Assignment(
     var weight: AssignmentWeight?,
     var description: String?,
     val course: Course,
-    val teacher: Base64Id
+    val teacher: Base64Id?
 )
 
 enum class AssignmentWeight {

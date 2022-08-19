@@ -1,6 +1,7 @@
 package dev.kason.slhsdb.core
 
 import arrow.core.Either
+import dev.kason.slhsdb.Base64Id
 import dev.kord.common.entity.Snowflake
 import kotlinx.datetime.LocalDate
 import org.litote.kmongo.eq
@@ -70,18 +71,21 @@ suspend fun registerAssignment(
     dueDate: LocalDate?,
     weight: AssignmentWeight?,
     description: String?,
-    course: Course,
-    teacher: Teacher
+    courseId: Base64Id,
+    teacher: Teacher? = null
 ): Either<AssignmentRegistrationError, Assignment> {
+    val course = courseDatabase.findOneById(courseId)!!
     val assignment = Assignment(
         name = name,
         dueDate = dueDate,
         weight = weight,
         description = description,
         course = course,
-        teacher = teacher.teacherId
+        teacher = teacher?.teacherId
     )
     assignmentDatabase.insertOne(assignment)
+    course.assignments += assignment.assignmentId
+    courseDatabase.updateOneById(course.courseId, course)
     return Either.Right(assignment)
 }
 

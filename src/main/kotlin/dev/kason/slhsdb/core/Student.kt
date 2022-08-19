@@ -6,6 +6,7 @@ import dev.kason.slhsdb.randomId
 import dev.kord.common.entity.Snowflake
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
+import org.litote.kmongo.eq
 
 @kotlinx.serialization.Serializable
 class Student(
@@ -27,9 +28,6 @@ class Student(
 
 val studentDatabase = database.getCollection<Student>()
 
-val EarlyRelease = Course(simpleName = "Early Release")
-val LateArrival = Course(simpleName = "Late Arrival")
-
 @kotlinx.serialization.Serializable
 class StudentCourse(
     val courseId: Base64Id = randomId(),
@@ -37,7 +35,8 @@ class StudentCourse(
     var teacher: String? = null,
     var period: Period,
 ) {
-
+    suspend fun course(): Course? = courseDatabase.findOneById(courseId)
+    suspend fun student(): Student? = studentDatabase.findOneById(studentId)
 }
 
 @kotlinx.serialization.Serializable
@@ -49,3 +48,5 @@ data class StudentBotData(
     var userJoinDate: LocalDate? = null,
     var userJoinValue: Int? = null,
 )
+
+suspend fun student(discordId: Snowflake) = studentDatabase.findOne(Student::discordId eq discordId)
