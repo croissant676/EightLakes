@@ -47,8 +47,9 @@ enum class StudentRegistrationError {
 
 suspend fun registerCourse(
     simpleName: String,
-    courseType: CourseType?,
-    channel: Snowflake?,
+    courseLevel: CourseLevel = CourseLevel.Other,
+    channel: Snowflake? = null,
+    teachers: List<Base64Id>? = null,
 ): Either<CourseRegistrationError, Course> {
     if (courseDatabase.findOne(Course::simpleName eq simpleName) != null) {
         return Either.Left(CourseRegistrationError.CourseRegistered)
@@ -57,8 +58,9 @@ suspend fun registerCourse(
     }
     val course = Course(
         simpleName = simpleName,
-        courseType = courseType,
-        channel = channel
+        courseLevel = courseLevel,
+        channel = channel,
+        teachers = teachers?.toMutableList()
     )
     courseDatabase.insertOne(course)
     return Either.Right(course)

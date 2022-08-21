@@ -49,7 +49,7 @@ object Base64IdSerializer : KSerializer<Base64Id> {
         else encoder.encodeString(value.toString())
 
     override fun deserialize(decoder: Decoder): Base64Id =
-        if (decoder is FlexibleDecoder && decoder.reader.currentBsonType == BsonType.ARRAY)
+        if (decoder is FlexibleDecoder && decoder.reader.currentBsonType == BsonType.BINARY)
             Base64Id(decoder.reader.readBinaryData().data)
         else idFromString(decoder.decodeString())
 }

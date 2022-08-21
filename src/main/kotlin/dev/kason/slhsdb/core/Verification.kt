@@ -12,7 +12,6 @@ import net.axay.simplekotlinmail.delivery.MailerManager
 import net.axay.simplekotlinmail.delivery.mailerBuilder
 import net.axay.simplekotlinmail.delivery.send
 import net.axay.simplekotlinmail.email.emailBuilder
-import org.litote.kmongo.lt
 import org.simplejavamail.api.email.EmailPopulatingBuilder
 import kotlin.time.Duration.Companion.hours
 
@@ -78,7 +77,18 @@ suspend fun verification(
         useUsername()
         to(studentCode.lowercase() + "@students.katyisd.org")
         withSubject("SLHS Discord Bot verification")
-        withPlainText("Your verification code is ${verification.token}. This token expires in 1 hour.")
+        withHTMLText(
+            """<html lang="en"><head> <meta charset="UTF-8"> <style> body { background: white; font-family: 'Dubai-Light',
+                 sans-serif; text-align: center; padding: 10%; margin: 0 auto; } .main { background: aliceblue; padding: 10%; }
+                  strong { color: orange; } h6 { font-size: 20px; } .bottom { padding: 1%; display: flex; width: 100%; height: 100%;
+                   justify-content: center; align-items: center; } p { padding: 5px; width: auto; font-size: 20px; background: white; }
+                    p:hover { background: #c3e4ff; } button { padding: 5px; font-family: 'Dubai-Light', sans-serif; text-align: center;
+                     font-size: 20px; background: white; border: white solid; width: auto; } button:hover { background: #c3e4ff;
+                      color: white; } </style></head><body><div class="main"> <h6> Your auth token is: </h6> <h1> <strong> ${verification.token}
+                       </strong> </h1> <h6> This token expires in <strong>1</strong> hour. </h6></div><div class="bottom"> <p>
+                        Created for the SLHS Discord bot. </p> <button onclick="github()"> Click here to view source on Github </button>
+                        </div><script> function github() { open("https://github.com/croissant676/BreakTracker") }</script></body></html>""".trimIndent()
+        )
     }.send().join()
     verificationCollection.insertOne(verification)
     return verification
@@ -86,7 +96,6 @@ suspend fun verification(
 
 suspend fun finish(token: String, discordMessenger: Snowflake): Either<String, Student> {
     val verification = verificationCollection.findOneById(token)!!
-    verificationCollection.deleteMany(Verification::expirationDate lt Clock.System.now())
     if (discordMessenger != verification.discordId) {
         return Either.Left("Please use the same discord account you used to register.")
     }
@@ -99,8 +108,10 @@ suspend fun finish(token: String, discordMessenger: Snowflake): Either<String, S
         middleName = verification.middleName,
         lastName = verification.lastName,
         studentCode = verification.studentCode,
-        preferredName = verification.preferredName
+        preferredName = verification.preferredName,
+        memberNumber = 0
     )
+    updateStudentJoinValues()
     studentDatabase.insertOne(student)
     return Either.Right(student)
 }

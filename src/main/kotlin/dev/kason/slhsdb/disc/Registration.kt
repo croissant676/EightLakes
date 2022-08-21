@@ -20,6 +20,8 @@ suspend fun addRegistrationCommand() {
         "Registers you into the system with the given information. You can edit the information later."
     ) {
         string("id", "Your student ID. Please capitalize the first letter") {
+            minLength = 8
+            maxLength = 8
             required = true
         }
         string("first", "Your first name as it would appear on your schedule") {
@@ -88,15 +90,14 @@ suspend fun addVerificationCommand() {
         }.tap {
             response.respond {
                 content = "Thanks for verifying. You've been signed up! :white_check_mark:"
-                interaction.user.addRole(_role!!, "Verification")
+                interaction.user.addRole(snowflake!!, "Verification")
             }
         }
     }
 }
 
-private var _role: Snowflake? = null
-
-val pobrecitosRoleId: Snowflake get() = _role!!
+private var snowflake: Snowflake? = null
+val pobrecitosRoleId: Snowflake get() = snowflake!!
 
 private const val searchRoleName: String = "Los Pobrecitos"
 
@@ -104,11 +105,11 @@ suspend fun addVerifiedRole() {
     val guild = kord.getGuild(guildId)!!
     for (currentRole in guild.roles.toList()) {
         if (currentRole.name == searchRoleName) {
-            _role = currentRole.id
+            snowflake = currentRole.id
             break
         }
     }
-    if (_role == null) _role = guild.createRole {
+    if (snowflake == null) snowflake = guild.createRole {
         name = searchRoleName
         color = Color(52, 219, 168)
     }.id

@@ -21,7 +21,9 @@ class Student(
     var birthday: LocalDate? = null,
     var courses: MutableMap<Period, StudentCourse> = mutableMapOf(),
     var genderSelectionOption: GenderSelectionOption? = null,
-    var settings: StudentBotData = StudentBotData(studentId),
+    var botData: StudentBotData = StudentBotData(studentId),
+    var settings: StudentBotSettings = StudentBotSettings(studentId),
+    var memberNumber: Int
 ) {
     val gender: Gender? get() = genderSelectionOption?.gender
 }
@@ -42,8 +44,6 @@ class StudentCourse(
 @kotlinx.serialization.Serializable
 data class StudentBotData(
     val forStudent: Base64Id,
-    var enabledDailyReminders: Boolean = false,
-    var enabledBirthdayPing: Boolean = true,
     var description: String = "A Seven Lakes student.",
     var userJoinDate: LocalDate? = null,
     var userJoinValue: Int? = null,
@@ -51,9 +51,21 @@ data class StudentBotData(
 
 val defaultSettings: MutableMap<String, Boolean> = mutableMapOf(
     "enabledDailyReminders" to false,
-    "enabledBirthdayPings" to true
+    "enabledBirthdayPing" to true
 )
 
+@kotlinx.serialization.Serializable
+data class StudentBotSettings(
+    val forStudent: Base64Id,
+    val settings: MutableMap<String, Boolean> = defaultSettings.toMutableMap()
+) {
+    val enabledDailyReminders: Boolean by settings
+    val enabledBirthdayPing: Boolean by settings
 
+    fun changeSetting(setting: String, enabled: Boolean) {
+        if (!settings.containsKey(setting)) throw IllegalStateException("Invalid setting: $setting")
+        else settings[setting] = enabled
+    }
+}
 
 suspend fun student(discordId: Snowflake) = studentDatabase.findOne(Student::discordId eq discordId)

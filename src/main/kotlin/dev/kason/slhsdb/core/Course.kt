@@ -2,6 +2,7 @@ package dev.kason.slhsdb.core
 
 import dev.kason.slhsdb.Base64Id
 import dev.kason.slhsdb.database
+import dev.kason.slhsdb.disc.toOrdinal
 import dev.kason.slhsdb.randomId
 import dev.kord.common.entity.Snowflake
 import kotlinx.datetime.LocalDate
@@ -14,7 +15,7 @@ class Course(
     var simpleName: String,
     val teachers: MutableList<Base64Id>? = mutableListOf(),
     val students: MutableList<StudentCourse> = mutableListOf(),
-    var courseType: CourseType? = null,
+    var courseLevel: CourseLevel = CourseLevel.Other,
     var channel: Snowflake? = null,
     val assignments: MutableList<Base64Id> = mutableListOf()
 )
@@ -32,13 +33,7 @@ enum class Period {
     SeventhPeriod;
 
     val number get() = ordinal + 1
-    val formalName: String
-        get() = when (number) {
-            1 -> "1st"
-            2 -> "2nd"
-            3 -> "3rd"
-            else -> "${number}th"
-        }
+    val formalName: String get() = ordinal.toOrdinal()
 }
 
 fun parsePeriod(inputString: String): Period = when (inputString) {
@@ -53,8 +48,8 @@ fun parsePeriod(inputString: String): Period = when (inputString) {
 }
 
 @kotlinx.serialization.Serializable
-enum class CourseType {
-    KAP, AP, Academic
+enum class CourseLevel {
+    KAP, AP, Academic, Other;
 }
 
 @kotlinx.serialization.Serializable
@@ -66,7 +61,11 @@ class Teacher(
     var lastName: String,
     var email: String,
     val courses: MutableMap<Period, Course>
-)
+) {
+    fun teacherName() =
+        if (middleName != null) "$firstName ${middleName!!.first()}. $lastName"
+        else "$firstName $lastName"
+}
 
 val teacherDatabase = database.getCollection<Teacher>()
 

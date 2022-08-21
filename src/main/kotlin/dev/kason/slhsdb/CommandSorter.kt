@@ -30,28 +30,3 @@ suspend fun registerCommandSorter() {
         }
     }
 }
-
-suspend fun checkGuildSaveUsed() {
-    kord.on<MessageCreateEvent> {
-        if (message.author?.isBot) return@on
-        if ("guild save" !in message.content) return@on
-        val offender = message.mentionedUsers.first()
-
-        /*
-        message.channel.asChannel()
-        message.channel.asChannel().data
-        message.getChannel().asChannelOf<TopGuildChannel>().addOverwrite(overwrite = PermissionOverwrite(
-            PermissionOverwriteData(message.author!!.id, OverwriteType.Member, denied = Permissions(
-                permissions =
-            ), allowed = Permissions())
-        ), "L counting")
-
-         */
-    }
-
-    kord.login {
-        // we need to specify this to receive the content of messages
-        @OptIn(PrivilegedIntent::class)
-        intents += Intent.MessageContent
-    }
-}

@@ -1,18 +1,17 @@
 package dev.kason.slhsdb.disc
 
-import dev.kason.slhsdb.core.Course
-import dev.kason.slhsdb.core.Period
-import dev.kason.slhsdb.core.courseDatabase
+import dev.kason.slhsdb.core.*
 import dev.kason.slhsdb.guildId
-import dev.kason.slhsdb.idFromString
 import dev.kason.slhsdb.kord
 import dev.kason.slhsdb.onExecute
 import dev.kord.core.behavior.interaction.response.respond
+import dev.kord.rest.builder.interaction.boolean
 import dev.kord.rest.builder.interaction.string
 import dev.kord.rest.builder.message.EmbedBuilder
 import dev.kord.rest.builder.message.modify.embed
 import kotlinx.coroutines.flow.first
-import org.litote.kmongo.eq
+
+private val camelRegex = """([a-z])([A-Z]+)""".toRegex()
 
 suspend fun addViewerCommands() {
     kord.createGuildChatInputCommand(
@@ -36,48 +35,30 @@ suspend fun addViewerCommands() {
             required = false
         }
     }.onExecute {
-        val strings = interaction.command.strings
-        val name = strings["name"]
         val response = interaction.deferPublicResponse()
-        if (name != null) {
+        val course = receiveCourse()
+        if (course == null) {
             response.respond {
-                val course = courseDatabase.findOne(Course::simpleName eq name)!!
-                embed {
-                    createEmbedFromCourse(course)
-                }
+                content = ":x: We couldn't find a course with that name."
             }
             return@onExecute
         }
-        val id = strings["id"]
-        if (id != null) {
-            response.respond {
-                val course = runCatching {
-                    courseDatabase.findOneById(idFromString(id))!!
-                }.getOrElse {
-                    content = ":x: We couldn't parse your id."
-                    return@respond
-                }
-                embed {
-                    createEmbedFromCourse(course)
-                }
-            }
-            return@onExecute
-        }
-        val period = strings["period"]
-        if (period != null) {
-            ensureVerified().tap {
-                response.respond {
-
-                }
+        response.respond {
+            embed {
+                createEmbedFromCourse(course)
             }
         }
     }
+    val kClass = StudentBotSettings::class
     kord.createGuildChatInputCommand(
         guildId,
         name = "settings",
         description = "Change personal settings"
     ) {
         string("setting", "Setting to change") {
+            required = true
+        }
+        boolean("value", "The new value.") {
             required = true
         }
     }.onExecute {
@@ -91,17 +72,17 @@ suspend fun addViewerCommands() {
         description = "See your profile"
     ).onExecute {
         ensureVerified().tap {
-            val response = interaction.deferEphemeralResponse()
+            val response = interaction.deferPublicResponse()
             response.respond {
                 embed {
                     title = "${it.firstName}\'s Profile"
-                    description = it.settings.description
+                    description = it.botData.description
                     color = interaction.user.roles.first().color
                     thumbnail {
                         url = interaction.user.avatar?.url ?: interaction.user.defaultAvatar.url
                     }
                     footer {
-                        text = "nth Member"
+                        text = "${it.memberNumber.toOrdinal()} member"
                     }
                 }
             }
@@ -112,5 +93,19 @@ suspend fun addViewerCommands() {
 
 
 suspend fun EmbedBuilder.createEmbedFromCourse(course: Course) {
-
+    title = course.simpleName
+    description = buildString {
+        append(course.courseLevel.name).append(" course -")
+        append("\n")
+        val teachers = course.teachers
+        if (teachers != null) {
+            append("Taught by ")
+            teachers.map { teacherDatabase.findOneById(it)!! }.joinTo(this) {
+                it.teacherName() + "[${it.email}]"
+            }
+        }
+    }
+    footer {
+        text = "#: \"${course.courseId}\""
+    }
 }
