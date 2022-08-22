@@ -3,9 +3,7 @@ package dev.kason.slhsdb
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.entity.application.ApplicationCommand
 import dev.kord.core.event.interaction.GuildChatInputCommandInteractionCreateEvent
-import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
-import kotlinx.coroutines.flow.first
 
 typealias CommandExecution = suspend GuildChatInputCommandInteractionCreateEvent.() -> Unit
 

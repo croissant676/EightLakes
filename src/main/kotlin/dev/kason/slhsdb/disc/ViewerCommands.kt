@@ -56,13 +56,20 @@ suspend fun addViewerCommands() {
         description = "Change personal settings"
     ) {
         string("setting", "Setting to change") {
+            kClass.members.filter { name != "forstudent" && name != "settings" }.forEach {
+                choice(it.name, it.name)
+            }
             required = true
         }
         boolean("value", "The new value.") {
             required = true
         }
     }.onExecute {
-        print("hi")
+        ensureVerified().tap {
+            val setting = interaction.command.strings["setting"]
+            val value = interaction.command.booleans["value"]
+            it.settings.changeSetting(setting!!, value!!)
+        }
     }
 
     //profile
