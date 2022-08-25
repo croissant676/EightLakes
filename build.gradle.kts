@@ -19,14 +19,20 @@ repositories {
 dependencies {
     implementation("io.arrow-kt:arrow-core:1.1.2")
     implementation("dev.kord:kord-core:0.8.0-M15")
+    implementation("dev.kord.x:emoji:0.5.0")
     implementation("ch.qos.logback:logback-classic:1.2.11")
-    implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.6.1")
+    implementation("org.jetbrains.exposed:exposed-core:0.39.2")
+    implementation("org.jetbrains.exposed:exposed-dao:0.39.2")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.39.2")
+    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.39.2")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
     implementation("net.axay:simplekotlinmail-core:1.4.0")
     implementation("net.axay:simplekotlinmail-client:1.4.0")
     implementation("net.axay:simplekotlinmail-html:1.4.0")
+    implementation("org.postgresql:postgresql:42.4.2")
+    implementation("io.github.config4k:config4k:0.4.2")
     testImplementation(kotlin("test"))
-    testImplementation("io.kotest:kotest-runner-junit5:5.4.1")
+    testImplementation("io.kotest:kotest-runner-junit5:5.4.2")
 }
 
 tasks.test {
