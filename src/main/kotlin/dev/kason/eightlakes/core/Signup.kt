@@ -1,15 +1,21 @@
 package dev.kason.eightlakes.core
 
-import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import dev.kason.eightlakes.applicationClass
 import dev.kason.eightlakes.core.models.Student
+import dev.kason.eightlakes.core.models.StudentVerification
 import dev.kason.eightlakes.core.models.Students
+import dev.kason.eightlakes.core.utils.Possible
+import dev.kason.eightlakes.core.utils.createSqlOp
+import dev.kason.eightlakes.random
 import dev.kord.common.entity.Snowflake
-import kotlinx.html.*
-import net.axay.simplekotlinmail.html.withHTML
+import io.ktor.util.*
+import kotlinx.datetime.Clock
 import org.jetbrains.exposed.sql.and
 import java.util.*
+import kotlin.text.isLowerCase
+import kotlin.time.Duration.Companion.hours
 
 // Returns either a message about why it failed, or a student
 suspend fun signupStudent(
@@ -19,7 +25,7 @@ suspend fun signupStudent(
     _lastName: String,
     _preferredName: String?,
     discordSnowflake: Snowflake
-): Either<String, Student> {
+): Possible<Student> {
     val startingChar = _studentId.first()
     if (!startingChar.isLetter())
         return "Your student ID should start with a letter.".left()
@@ -47,31 +53,21 @@ suspend fun signupStudent(
         this.preferredName = preferredName
         this.discordId = discordSnowflake
     }
-    sendEmailHTML(newStudent)
+    val verificationCode = StudentVerification.new {
+        this.student = student
+        this.token = random.nextBytes(24).encodeBase64()
+        this.expirationDate = Clock.System.now() + 1.hours
+    }
+    sendEmailVerification(newStudent, verificationCode)
     return newStudent.right()
 }
 
 // The HTML for the email
-suspend fun sendEmailHTML(student: Student) {
+// If result == null, completed successfully, otherwise, returns an error message.
+suspend fun sendEmailVerification(student: Student, verification: StudentVerification): String? = runCatching {
     sendEmailTo(student.email) {
-        withHTML {
-            head {
-                link("") {
+        val url = applicationClass.getResource("/email.html")?.file
 
-                }
-            }
-            body {
-                div {
-                }
-                div {
-                    p("") {
-                        +"Created for the Eight Lakes Discord Bot project."
-                    }
-                    a("https://github.com/croissant676/EightLakes") {
-
-                    }
-                }
-            }
-        }
     }
-}
+    return@runCatching null
+}.getOrElse { "The email could not be sent." }

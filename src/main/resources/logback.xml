@@ -3,9 +3,10 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <withJansi>true</withJansi>
         <encoder>
-            <pattern>| %blue(%-2d{ISO8601}) | %cyan(%-11.-11thread) | %highlight(%-5level) | %magenta(%-20.-20logger) |
-                %msg%n
+            <!-- @formatter:off -->
+            <pattern>| %blue(%-2d{ISO8601}) | %cyan(%-11.-11thread) | %highlight(%-5level) | %magenta(%-20.-20logger) | %msg%n
             </pattern>
+            <!-- @formatter:on -->
         </encoder>
     </appender>
     <root level="DEBUG">

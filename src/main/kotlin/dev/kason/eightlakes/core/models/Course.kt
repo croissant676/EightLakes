@@ -1,6 +1,6 @@
 package dev.kason.eightlakes.core.models
 
-import dev.kason.eightlakes.core.toOrdinal
+import dev.kason.eightlakes.core.utils.toOrdinal
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

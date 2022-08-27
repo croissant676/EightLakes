@@ -2,12 +2,13 @@
 
 package dev.kason.eightlakes.core.models
 
-import dev.kason.eightlakes.core.snowflakeDelegate
+import dev.kason.eightlakes.core.utils.snowflakeDelegate
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.kotlin.datetime.date
+import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 object Students : IntIdTable("students") {
     val firstName = varchar("first_name", 30).index()
@@ -16,7 +17,7 @@ object Students : IntIdTable("students") {
     val studentId = varchar("student_id", 8).uniqueIndex("student_id_unique")
     val preferredName = varchar("preferred_name", 20).nullable().index()
     val birthday = date("birthday").nullable()
-    val discordSnowflakeValue = long("discord_id").index()
+    val snowflakeValue = long("discord_id").uniqueIndex("student_discord_id_unique")
     val verified = bool("verified")
 }
 
@@ -32,9 +33,11 @@ class Student(id: EntityID<Int>) : IntEntity(id) {
     var verified by Students.verified
     val classes by StudentClass referrersOn StudentClasses.student
 
-    var discordId by snowflakeDelegate(Students.discordSnowflakeValue)
+    var discordId by snowflakeDelegate(Students.snowflakeValue)
     val email: String get() = "$studentId@students.katyisd.org"
 
+    // preferred or first
+    val prefOrFirstName: String get() = preferredName ?: firstName
 }
 
 object StudentClasses : IntIdTable("student_classes") {
@@ -55,8 +58,13 @@ class StudentClass(id: EntityID<Int>) : IntEntity(id) {
 object StudentVerifications : IntIdTable("student_verification") {
     val studentReference = reference("student", Students)
     val token = varchar("token", 32)
+    val expirationDate = timestamp("expiration")
 }
 
-class StudentVerification {
+class StudentVerification(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<StudentVerification>(StudentVerifications)
 
+    var student by StudentVerifications.studentReference
+    var token by StudentVerifications.token
+    var expirationDate by StudentVerifications.expirationDate
 }
