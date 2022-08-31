@@ -3,9 +3,10 @@ package dev.kason.eightlakes
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import dev.kason.eightlakes.core.models.*
-import dev.kason.eightlakes.discord.addMessageListener
+import dev.kason.eightlakes.core.signupStudent
 import dev.kason.eightlakes.discord.checkCounting
 import dev.kason.eightlakes.discord.enableProfileCommand
+import dev.kason.eightlakes.discord.utils.addMessageListener
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.entity.Guild
@@ -19,7 +20,7 @@ import org.jetbrains.exposed.sql.Slf4jSqlDebugLogger
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.security.SecureRandom
 import kotlin.random.asKotlinRandom
-import kotlin.reflect.jvm.javaMethod
+import kotlin.reflect.KClass
 
 private var _kord: Kord? = null
 val kord: Kord get() = _kord!!
@@ -36,7 +37,7 @@ val random = SecureRandom().asKotlinRandom()
 private var _database: Database? = null
 val database: Database get() = _database!!
 
-val applicationClass: Class<*> = ::main.javaMethod!!.declaringClass
+val applicationClass: KClass<*> = Student::class
 
 @OptIn(PrivilegedIntent::class)
 suspend fun main() {
@@ -53,7 +54,7 @@ suspend fun main() {
             sqlLogger = Slf4jSqlDebugLogger
         }
     )
-    database.configure()
+    configure()
     discordModule()
     kord.login {
         intents = Intents.all
@@ -61,15 +62,25 @@ suspend fun main() {
     }
 }
 
-suspend fun Database.configure() = newSuspendedTransaction {
+suspend fun configure() = newSuspendedTransaction {
     SchemaUtils.createMissingTablesAndColumns(
         Students,
         Teachers,
         Courses,
         StudentClasses,
-        StudentVerifications
+        StudentVerifications,
+        Classes,
+        Assignments,
+
+        )
+    signupStudent(
+        _studentId = "g1003409",
+        _firstName = "kason",
+        _middleName = "kaixuan",
+        _lastName = "gu",
+        _preferredName = null,
+        discordSnowflake = Snowflake(764180149251080192)
     )
-    Students.createStatement()
 }
 
 suspend fun discordModule() {

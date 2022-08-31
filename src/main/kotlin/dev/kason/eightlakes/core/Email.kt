@@ -1,6 +1,11 @@
 package dev.kason.eightlakes.core
 
+import com.typesafe.config.ConfigObject
 import dev.kason.eightlakes.config
+import io.github.config4k.getValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import mu.KotlinLogging
 import net.axay.simplekotlinmail.delivery.MailerManager
 import net.axay.simplekotlinmail.delivery.mailerBuilder
 import net.axay.simplekotlinmail.delivery.send
@@ -14,27 +19,36 @@ val emailUsername: String
         return _emailUsername!!
     }
 
+private val emailLogger = KotlinLogging.logger { }
+
 fun createMailerInstance() {
     val emailConfig = config.getConfig("bot.email")!!
     _emailUsername = emailConfig.getString("username")
+    val host: String? by emailConfig
+    val port: Int? by emailConfig
+    emailLogger.debug { "Mailer = {$host:$port}, username = $emailUsername" }
     MailerManager.defaultMailer = mailerBuilder(
-        host = runCatching { config.getString("host") }.getOrDefault("localhost"),
-        port = runCatching { config.getInt("port") }.getOrDefault(25),
+        host = host ?: "localhost",
+        port = port ?: 25,
         username = emailUsername,
-        password = emailConfig.getString("email.password")
+        password = emailConfig.getString("password")
     ) {
-        val propertyConfig = emailConfig.getConfig("props")
-        val keys = propertyConfig.root().keys
-        for (key in keys) {
-            properties["mail.$key"] = propertyConfig.getString(key)
+        val propertyConfig = emailConfig.getConfig("props").root()
+        // simple bfs through the config tree
+        val objectQueue = ArrayDeque<ConfigObject>()
+        objectQueue += propertyConfig
+        while (objectQueue.isNotEmpty()) {
+            val configObject = objectQueue.removeFirst()
+            configObject
         }
     }
 }
 
-suspend fun sendEmailTo(emailAddress: String, block: suspend EmailPopulatingBuilder.() -> Unit) {
-    emailBuilder {
-        from(emailAddress)
-        to(emailAddress)
-        block()
-    }.send(MailerManager.defaultMailer)
-}
+suspend fun sendEmailTo(emailAddress: String, block: suspend EmailPopulatingBuilder.() -> Unit) =
+    withContext(Dispatchers.IO) {
+        emailBuilder {
+            from(emailAddress)
+            to(emailAddress)
+            block()
+        }.send(MailerManager.defaultMailer)
+    }

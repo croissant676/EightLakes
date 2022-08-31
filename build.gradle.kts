@@ -31,6 +31,7 @@ dependencies {
     implementation("net.axay:simplekotlinmail-html:1.4.0")
     implementation("org.postgresql:postgresql:42.4.2")
     implementation("io.github.config4k:config4k:0.4.2")
+    implementation("de.vandermeer:asciitable:0.3.2")
     testImplementation(kotlin("test"))
     testImplementation("io.kotest:kotest-runner-junit5:5.4.2")
 }

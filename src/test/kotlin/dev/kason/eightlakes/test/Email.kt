@@ -1,9 +1,10 @@
 package dev.kason.eightlakes.test
 
+import dev.kason.eightlakes.core.createMailerInstance
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 
-fun main() {
+fun main0() {
     val block: TagConsumer<StringBuilder>.() -> StringBuilder = {
         head {
             meta {
@@ -48,4 +49,8 @@ fun main() {
         }
     }
     println(StringBuilder().appendHTML().block())
+}
+
+fun main() {
+    createMailerInstance()
 }

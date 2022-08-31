@@ -1,37 +1,24 @@
 package dev.kason.eightlakes.core.utils
 
 import dev.kord.common.entity.Snowflake
-import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.sql.Column
-import kotlin.reflect.KProperty
-
-
-interface SnowflakeDelegate<ID : Comparable<ID>> {
-    operator fun getValue(entity: Entity<ID>, property: KProperty<*>): Snowflake
-    operator fun setValue(entity: Entity<ID>, property: KProperty<*>, snowflake: Snowflake)
-}
-
-private val snowflakeDelegateMap: MutableMap<Column<Long>, SnowflakeDelegate<*>> = mutableMapOf()
-
-// Snowflake Delegate impl
-@Suppress("UNCHECKED_CAST")
-fun <ID : Comparable<ID>> Entity<ID>.snowflakeDelegate(column: Column<Long>): SnowflakeDelegate<ID> =
-    snowflakeDelegateMap.getOrPut(column) {
-        object : SnowflakeDelegate<ID> {
-            var cachingSnowflake: Snowflake? = null
-            override fun getValue(entity: Entity<ID>, property: KProperty<*>): Snowflake {
-                val dataValue = column.lookup().toULong()
-                if (cachingSnowflake == null || dataValue != cachingSnowflake!!.value)
-                    cachingSnowflake = Snowflake(dataValue)
-                return cachingSnowflake!!
-            }
-
-            override fun setValue(entity: Entity<ID>, property: KProperty<*>, snowflake: Snowflake) {
-                // Converting ULong to Long is allowed: look at Snowflake's Serializer
-                val snowflakeValue = snowflake.long()
-                column.setValue(entity, property, snowflakeValue)
-            }
-        }
-    } as SnowflakeDelegate<ID>
+import org.jetbrains.exposed.sql.ColumnType
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.currentDialect
 
 fun Snowflake.long() = value.toLong()
+
+class SnowflakeColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
+    override fun valueFromDB(value: Any): Snowflake = when (value) {
+        is Long -> Snowflake(value)
+        is ULong -> Snowflake(value)
+        else -> error("$value: Values from the database for a snowflake column should only be longs.")
+    }
+
+    override fun notNullValueToDB(value: Any): Long = if (value !is Snowflake)
+        error("$value: Snowflake columns can only store snowflakes.")
+    else value.long()
+}
+
+fun Table.snowflake(name: String): Column<Snowflake> = registerColumn(name, SnowflakeColumnType())

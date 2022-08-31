@@ -14,10 +14,22 @@ object Teachers : IntIdTable("teachers") {
 }
 
 class Teacher(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<Teacher>(Students)
+    companion object : IntEntityClass<Teacher>(Teachers)
 
     var firstName by Teachers.firstName
     var middleName by Teachers.middleName
     var lastName by Teachers.lastName
     var email by Teachers.email
+    val teacherClasses by TeacherClass referrersOn TeacherClasses.teacher
+}
+
+object TeacherClasses : IntIdTable("teacher_classes") {
+    val teacher = reference("teacher", Teachers)
+    val course = reference("course", Courses)
+
+}
+
+class TeacherClass(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<Teacher>(Teachers)
+
 }

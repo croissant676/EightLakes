@@ -1,11 +1,14 @@
-package dev.kason.eightlakes.discord
+package dev.kason.eightlakes.discord.utils
 
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import dev.kason.eightlakes.core.models.Student
 import dev.kason.eightlakes.core.models.Students
-import dev.kason.eightlakes.core.utils.*
+import dev.kason.eightlakes.core.utils.InternalOutput
+import dev.kason.eightlakes.core.utils.Possible
+import dev.kason.eightlakes.core.utils.leftValue
+import dev.kason.eightlakes.core.utils.rightValue
 import dev.kason.eightlakes.guild
 import dev.kason.eightlakes.guildId
 import dev.kason.eightlakes.kord
@@ -148,7 +151,7 @@ suspend fun GuildAppCommandEvent.member(): Member = guild.getMember(user.id)
 suspend fun InteractionCreateEvent.student(): Either<StudentSignInError, Student> {
     val discordId = interaction.user.id
     val possibleStudents =
-        newSuspendedTransaction { Student.find { Students.snowflakeValue eq discordId.long() }.toList() }
+        newSuspendedTransaction { Student.find { Students.discordId eq discordId }.toList() }
     if (possibleStudents.isEmpty()) return StudentSignInError.NotRegistered.left()
     val student = possibleStudents.first()
     if (!student.verified) return StudentSignInError.NotVerified.left()

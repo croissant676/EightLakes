@@ -13,7 +13,15 @@ suspend fun searchRoles(
     val roles = guild.roles.toList()
     // Having the same color, name, and permissions should be enough
     return roles.firstOrNull {
-        it.name == roleCreateBuilder.name &&
-                it.color == roleCreateBuilder.color
+        it.name == roleCreateBuilder.name
     } ?: guild.createRole(block)
+}
+
+private var _adminRole: Role? = null
+val adminRole: Role get() = _adminRole!!
+
+suspend fun searchForAdminRole() {
+    searchRoles {
+        name = "admin"
+    }
 }
