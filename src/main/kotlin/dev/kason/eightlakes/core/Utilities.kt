@@ -1,6 +1,5 @@
 package dev.kason.eightlakes.core
 
-import dev.kason.eightlakes.config
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -24,5 +23,3 @@ fun illegalArg(message: String, cause: Throwable? = null): Nothing =
 
 suspend fun <T> suspendTransaction(block: suspend Transaction.() -> T): T =
     newSuspendedTransaction(Dispatchers.IO, statement = block)
-
-fun response(path: String) = config.getString("bot.responses.$path")!!

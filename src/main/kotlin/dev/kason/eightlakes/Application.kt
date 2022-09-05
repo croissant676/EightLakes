@@ -1,7 +1,7 @@
 package dev.kason.eightlakes
 
 import dev.kason.eightlakes.core.*
-import dev.kason.eightlakes.discord.registerCommandListener
+import dev.kason.eightlakes.discord.*
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.entity.*
@@ -32,6 +32,8 @@ val database: Database get() = _database!!
 private var _application: Application? = null
 val application: Application get() = _application!!
 
+val appId = Snowflake(config.getLong("bot.appId"))
+
 @OptIn(PrivilegedIntent::class)
 suspend fun main() {
     logger.info { "Starting application Eight Lakes application." }
@@ -51,6 +53,7 @@ suspend fun main() {
     updateTablesAndColumns()
     registerCommandListener()
     registerMailer()
+    registerAllCommands()
     kord.login {
         intents {
             +Intents.all

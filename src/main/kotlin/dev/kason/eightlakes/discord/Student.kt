@@ -16,6 +16,11 @@ suspend fun InteractionCreateEvent.student(): Student {
     val discordId = interaction.user.id
     val student = suspendTransaction {
         Student.find(Students.discordId eq discordId).singleOrNull()
-    } ?: illegalArg(response("not-registered"))
-    return if (student.isVerified) student else illegalArg(response("not-verified"))
+    } ?: illegalArg("You aren't registered yet. Use the command `/signup` in order to register.")
+    return if (student.isVerified) student else illegalArg(
+        """
+        You need to verify your email first. Check your school email (the one that ends with `students.katyisd.org`)
+        and do `/verify [token]` in order to verify your account.
+        """.trimIndent()
+    )
 }

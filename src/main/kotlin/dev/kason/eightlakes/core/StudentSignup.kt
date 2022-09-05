@@ -22,11 +22,11 @@ suspend fun registerStudent(
     discordId: Snowflake
 ): Student {
     if (!(studentIdRegex matches _studentId)) illegalArg("The student id `$_studentId` is not a valid student id.")
-    val studentId = _studentId.replaceFirstChar(Char::uppercase)
-    val firstName = _firstName.replaceFirstChar(Char::uppercase)
-    val middleName = _middleName?.replaceFirstChar(Char::uppercase)
-    val lastName = _lastName.replaceFirstChar(Char::uppercase)
-    val preferredName = _preferredName?.replaceFirstChar(Char::uppercase)
+    val studentId = _studentId.lowercase().replaceFirstChar(Char::uppercase)
+    val firstName = _firstName.lowercase().replaceFirstChar(Char::uppercase)
+    val middleName = _middleName?.lowercase()?.replaceFirstChar(Char::uppercase)
+    val lastName = _lastName.lowercase().replaceFirstChar(Char::uppercase)
+    val preferredName = _preferredName?.lowercase()?.replaceFirstChar(Char::uppercase)
     val failsChecks = suspendTransaction {
         val nameCount = Student.count(
             (Students.firstName eq firstName) and
