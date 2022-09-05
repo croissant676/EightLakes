@@ -1,54 +1,33 @@
 package dev.kason.eightlakes.core
 
-import com.typesafe.config.ConfigObject
-import dev.kason.eightlakes.config
-import io.github.config4k.getValue
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import mu.KotlinLogging
-import net.axay.simplekotlinmail.delivery.MailerManager
-import net.axay.simplekotlinmail.delivery.mailerBuilder
-import net.axay.simplekotlinmail.delivery.send
-import net.axay.simplekotlinmail.email.emailBuilder
-import org.simplejavamail.api.email.EmailPopulatingBuilder
+import dev.kason.eightlakes.*
+import net.axay.simplekotlinmail.delivery.*
+import uy.klutter.config.typesafe.value
 
 private var _emailUsername: String? = null
 val emailUsername: String
     get() {
-        if (_emailUsername == null) createMailerInstance()
+        if (_emailUsername == null) registerMailer()
         return _emailUsername!!
     }
 
-private val emailLogger = KotlinLogging.logger { }
-
-fun createMailerInstance() {
-    val emailConfig = config.getConfig("bot.email")!!
-    _emailUsername = emailConfig.getString("username")
-    val host: String? by emailConfig
-    val port: Int? by emailConfig
-    emailLogger.debug { "Mailer = {$host:$port}, username = $emailUsername" }
+fun registerMailer() {
+    _emailUsername = config.value("email.username").asString()
+    val host = config.value("email.host").asString("localhost")
+    val port = config.value("email.port").asInt(25)
+    val password = config.value("email.password").asStringOrNull()
     MailerManager.defaultMailer = mailerBuilder(
-        host = host ?: "localhost",
-        port = port ?: 25,
+        host = host,
+        port = port,
         username = emailUsername,
-        password = emailConfig.getString("password")
+        password = password
     ) {
-        val propertyConfig = emailConfig.getConfig("props").root()
-        // simple bfs through the config tree
-        val objectQueue = ArrayDeque<ConfigObject>()
-        objectQueue += propertyConfig
-        while (objectQueue.isNotEmpty()) {
-            val configObject = objectQueue.removeFirst()
-            configObject
+        val propsConfig = config.value("email.props").asObjectOrNull()?.toConfig()
+            ?: return@mailerBuilder
+        val propsAsMap = propsConfig.entrySet().associate { it.key to propsConfig.getString(it.key) }
+        for ((string, configuredValue) in propsAsMap) {
+            properties["mail.$string"] = configuredValue
         }
+        logger.debug { "Inserted properties $propsAsMap into mailer.properties" }
     }
 }
-
-suspend fun sendEmailTo(emailAddress: String, block: suspend EmailPopulatingBuilder.() -> Unit) =
-    withContext(Dispatchers.IO) {
-        emailBuilder {
-            from(emailAddress)
-            to(emailAddress)
-            block()
-        }.send(MailerManager.defaultMailer)
-    }
