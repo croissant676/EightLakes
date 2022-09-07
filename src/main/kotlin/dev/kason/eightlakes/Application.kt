@@ -1,6 +1,7 @@
 package dev.kason.eightlakes
 
 import dev.kason.eightlakes.core.*
+import dev.kason.eightlakes.core.data.*
 import dev.kason.eightlakes.discord.*
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
@@ -36,7 +37,7 @@ val appId = Snowflake(config.getLong("bot.appId"))
 
 @OptIn(PrivilegedIntent::class)
 suspend fun main() {
-    logger.info { "Starting application Eight Lakes application." }
+    logger.info { "Starting application: Eight Lakes." }
     _kord = Kord(config.getString("bot.token")) {
         stackTraceRecovery = true
     }

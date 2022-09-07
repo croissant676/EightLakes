@@ -1,4 +1,4 @@
-package dev.kason.eightlakes.core
+package dev.kason.eightlakes.core.data
 
 import kotlinx.datetime.Clock
 import org.jetbrains.exposed.dao.*

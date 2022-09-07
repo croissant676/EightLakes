@@ -1,5 +1,6 @@
-package dev.kason.eightlakes.discord
+package dev.kason.eightlakes.discord.main
 
+import dev.kason.eightlakes.discord.*
 import dev.kord.core.behavior.interaction.respondPublic
 import dev.kord.rest.builder.interaction.user
 import dev.kord.rest.builder.message.create.embed
@@ -17,7 +18,6 @@ suspend fun _profileCommand() = chatInputCommand(
             title = "${user.name()}'s profile"
             description = student.biography ?: "A SLHS student."
             image = user.avatar?.url ?: user.defaultAvatar.url
-
         }
     }
 }

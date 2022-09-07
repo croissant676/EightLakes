@@ -1,15 +1,16 @@
 package dev.kason.eightlakes.discord
 
 import dev.kason.eightlakes.*
-import dev.kord.common.entity.*
+import dev.kason.eightlakes.discord.main.*
+import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.entity.application.*
 import dev.kord.core.event.interaction.*
 import dev.kord.core.on
 import dev.kord.rest.builder.interaction.*
 import dev.kord.x.emoji.Emojis
-import kotlinx.coroutines.flow.*
 import mu.KotlinLogging
+import uy.klutter.config.typesafe.value
 
 typealias GuildChatInputEvent = GuildChatInputCommandInteractionCreateEvent
 typealias GuildUserCommandEvent = GuildUserCommandInteractionCreateEvent
@@ -25,23 +26,23 @@ suspend fun chatInputCommand(
     name: String,
     description: String,
     block: ChatInputCreateBuilder.() -> Unit = {}
-): GuildChatInputCommand = guild.getApplicationCommands().filter {
-    it.applicationId == appId && it.type == ApplicationCommandType.ChatInput && it.name == name
-}.firstOrNull() as? GuildChatInputCommand ?: kord.createGuildChatInputCommand(guildId, name, description, block)
+) = CommandCache.retrieveOfType<GuildChatInputCommand>().firstOrNull {
+    it.name == name
+} ?: CommandCache.insert(kord.createGuildChatInputCommand(guildId, name, description, block))
 
 suspend fun messageCommand(
     name: String,
     block: MessageCommandCreateBuilder.() -> Unit = {}
-): GuildMessageCommand = guild.getApplicationCommands().filter {
-    it.applicationId == appId && it.type == ApplicationCommandType.Message && it.name == name
-}.firstOrNull() as? GuildMessageCommand ?: kord.createGuildMessageCommand(guildId, name, block)
+) = CommandCache.retrieveOfType<GuildMessageCommand>().firstOrNull {
+    it.name == name
+} ?: CommandCache.insert(kord.createGuildMessageCommand(guildId, name, block))
 
 suspend fun userCommand(
     name: String,
     block: UserCommandCreateBuilder.() -> Unit = {}
-): GuildUserCommand = guild.getApplicationCommands().filter {
-    it.applicationId == appId && it.type == ApplicationCommandType.User && it.name == name
-}.firstOrNull() as? GuildUserCommand ?: kord.createGuildUserCommand(guildId, name, block)
+): GuildUserCommand = CommandCache.retrieveOfType<GuildUserCommand>().firstOrNull {
+    it.name == name
+} ?: CommandCache.insert(kord.createGuildUserCommand(guildId, name, block))
 
 private val chatInputExecutions = ExecutionMap<GuildChatInputEvent>()
 private val messageCommandExecutions = ExecutionMap<GuildMessageCommandEvent>()
@@ -62,25 +63,29 @@ private fun <T : GuildApplicationCommand> T.log(block: T.() -> Unit): T {
 }
 
 @Suppress("UNCHECKED_CAST")
-suspend fun registerCommandListener() = kord.on<GuildAppCommandEvent> {
-    if (interaction.applicationId != appId) return@on // Ignore commands that aren't ours.
-    val map = when (this) {
-        is GuildChatInputEvent -> chatInputExecutions
-        is GuildMessageCommandEvent -> messageCommandExecutions
-        is GuildUserCommandEvent -> userCommandExecutions
-    } as? ExecutionMap<GuildAppCommandEvent> ?: error("Unspecified GuildAppCommandEvent instance ${this::class}.")
-    val execution = map[interaction.invokedCommandId]
-        ?: return@on commandLogger.debug { "Unknown command `/${interaction.invokedCommandName}` of type <${this::class}> was invoked." }
-    val loggerPrefix = "[Interaction ${interaction.id}]"
-    logger.debug { "$loggerPrefix Executing function `/${interaction.invokedCommandName}`, type <${this::class}>" }
-    try {
-        execution(this)
-        logger.debug { "$loggerPrefix Finished executing function `/${interaction.invokedCommandName}`" }
-    } catch (exception: Exception) {
-        commandLogger.warn(exception) { "$loggerPrefix An execution occurred while invoking command `/${interaction.invokedCommandName}.`" }
-        interaction.respondEphemeral {
-            this.content = if (exception is IllegalStateException) "${Emojis.x} An internal server error occurred."
-            else "${Emojis.x} ${exception.message}"
+suspend fun registerCommandListener() {
+    CommandCache.retrieveCommands()
+    // Register the actual command listener now
+    kord.on<GuildAppCommandEvent> {
+        if (interaction.applicationId != appId) return@on // Ignore commands that aren't ours.
+        val map = when (this) {
+            is GuildChatInputEvent -> chatInputExecutions
+            is GuildMessageCommandEvent -> messageCommandExecutions
+            is GuildUserCommandEvent -> userCommandExecutions
+        } as? ExecutionMap<GuildAppCommandEvent> ?: error("Unspecified GuildAppCommandEvent instance ${this::class}.")
+        val execution = map[interaction.invokedCommandId]
+            ?: return@on commandLogger.debug { "Unknown command `/${interaction.invokedCommandName}` of type <${this::class}> was invoked." }
+        val loggerPrefix = "[Interaction ${interaction.id}]"
+        commandLogger.debug { "$loggerPrefix Executing function `/${interaction.invokedCommandName}`, type <${this::class}>" }
+        try {
+            execution(this)
+            commandLogger.debug { "$loggerPrefix Finished executing function `/${interaction.invokedCommandName}`" }
+        } catch (exception: Exception) {
+            commandLogger.warn(exception) { "$loggerPrefix An execution occurred while invoking command `/${interaction.invokedCommandName}.`" }
+            interaction.respondEphemeral {
+                this.content = if (exception is IllegalStateException) "${Emojis.x} An internal server error occurred."
+                else "${Emojis.x} ${exception.message}"
+            }
         }
     }
 }
@@ -89,10 +94,13 @@ val required: OptionsBuilder.() -> Unit = { required = true }
 val notRequired: OptionsBuilder.() -> Unit = { required = false }
 
 suspend fun registerAllCommands() {
-    val commands = guild.getApplicationCommands().filter { it.applicationId == appId }.toList()
-    logger.debug { "Deleting commands ${commands.map { it.name }}" }
-    commands.forEach {
-        it.delete()
+    if (config.value("bot.delete-commands").asBoolean(false)) {
+        val commands = CommandCache.all()
+        logger.debug { "Deleting commands ${commands.map { it.name }}" }
+        commands.forEach {
+            it.delete()
+        }
+        CommandCache.clear()
     }
     _signupCommand()
     _verificationCommand()

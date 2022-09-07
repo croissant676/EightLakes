@@ -1,6 +1,7 @@
-package dev.kason.eightlakes.discord
+package dev.kason.eightlakes.discord.main
 
 import dev.kason.eightlakes.core.*
+import dev.kason.eightlakes.discord.*
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.rest.builder.interaction.string
 import dev.kord.x.emoji.Emojis

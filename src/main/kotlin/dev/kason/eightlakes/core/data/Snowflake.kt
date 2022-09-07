@@ -1,4 +1,4 @@
-package dev.kason.eightlakes.core
+package dev.kason.eightlakes.core.data
 
 import dev.kord.common.entity.Snowflake
 import kotlinx.datetime.Instant
