@@ -11,9 +11,10 @@ object Students : IntIdTable("students") {
     val lastName = varchar("last_name", 255)
     val preferredName = varchar("preferred_name", 255).nullable()
     val studentId = char("student_id", 8)
-    val discordId = snowflake("discord_id")
+    val discordId = snowflake("discord_id").uniqueIndex()
     val birthday = date("birthday")
     val verified = bool("verified")
+    val biography = text("biography", eagerLoading = true).nullable()
 }
 
 class Student(id: EntityID<Int>) : IntEntity(id) {
@@ -27,6 +28,7 @@ class Student(id: EntityID<Int>) : IntEntity(id) {
     var discordId by Students.discordId
     var birthday by Students.birthday
     var isVerified by Students.verified
+    var biography by Students.biography
 
     val classes by StudentClass referrersOn StudentClasses.student
 

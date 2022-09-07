@@ -1,6 +1,6 @@
 package dev.kason.eightlakes.discord
 
-import dev.kason.eightlakes.core.registerStudent
+import dev.kason.eightlakes.core.*
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.rest.builder.interaction.string
 import dev.kord.x.emoji.Emojis
@@ -40,5 +40,21 @@ suspend fun _signupCommand() = chatInputCommand(
         content = "${Emojis.whiteCheckMark} Thanks for registering! Now all you need to do is go to your school " +
                 "email account. (the one that ends with `@students.katyisd.org`) and get the token. Then, use the command" +
                 "`/verify [token]` to finish the signup process."
+    }
+}
+
+suspend fun _verificationCommand() = chatInputCommand(
+    "verify",
+    "Verifies your discord account."
+) {
+    string("token", "The token you received.", required)
+}.onExecute {
+    val token by interaction.command.strings
+    val discordId = interaction.user.id
+    finishVerification(
+        token, discordId
+    )
+    interaction.respondEphemeral {
+        content = "${Emojis.whiteCheckMark} Thanks for verifying with us. You've finished your signup!"
     }
 }

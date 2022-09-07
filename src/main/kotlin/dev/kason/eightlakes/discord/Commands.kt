@@ -10,14 +10,13 @@ import dev.kord.rest.builder.interaction.*
 import dev.kord.x.emoji.Emojis
 import kotlinx.coroutines.flow.*
 import mu.KotlinLogging
-import kotlin.reflect.KClass
 
 typealias GuildChatInputEvent = GuildChatInputCommandInteractionCreateEvent
 typealias GuildUserCommandEvent = GuildUserCommandInteractionCreateEvent
 typealias GuildMessageCommandEvent = GuildMessageCommandInteractionCreateEvent
 typealias GuildAppCommandEvent = GuildApplicationCommandInteractionCreateEvent
-private typealias ExecutionMap<E> = HashMap<Snowflake, DebuggableExecution<E>>
-private typealias CommandExecution<T> = suspend T.() -> Unit
+private typealias ExecutionMap<E> = HashMap<Snowflake, SuspendingExecution<E>>
+private typealias SuspendingExecution<T> = suspend T.() -> Unit
 
 private val commandLogger = KotlinLogging.logger {}
 
@@ -48,67 +47,46 @@ private val chatInputExecutions = ExecutionMap<GuildChatInputEvent>()
 private val messageCommandExecutions = ExecutionMap<GuildMessageCommandEvent>()
 private val userCommandExecutions = ExecutionMap<GuildUserCommandEvent>()
 
-fun GuildChatInputCommand.onExecute(block: CommandExecution<GuildChatInputEvent>): GuildChatInputCommand =
-    also { chatInputExecutions[id] = debuggable(block) }
+fun GuildChatInputCommand.onExecute(block: SuspendingExecution<GuildChatInputEvent>): GuildChatInputCommand =
+    log { chatInputExecutions[id] = block }
 
-fun GuildMessageCommand.onExecute(block: CommandExecution<GuildMessageCommandEvent>): GuildMessageCommand =
-    also { messageCommandExecutions[id] = debuggable(block) }
+fun GuildMessageCommand.onExecute(block: SuspendingExecution<GuildMessageCommandEvent>): GuildMessageCommand =
+    log { messageCommandExecutions[id] = block }
 
-fun GuildUserCommand.onExecute(block: CommandExecution<GuildUserCommandEvent>): GuildUserCommand =
-    also { userCommandExecutions[id] = debuggable(block) }
+fun GuildUserCommand.onExecute(block: SuspendingExecution<GuildUserCommandEvent>): GuildUserCommand =
+    log { userCommandExecutions[id] = block }
 
+private fun <T : GuildApplicationCommand> T.log(block: T.() -> Unit): T {
+    commandLogger.debug { "Registering command `/$name` of type <${this::class}>." }
+    return apply(block)
+}
 
 @Suppress("UNCHECKED_CAST")
 suspend fun registerCommandListener() = kord.on<GuildAppCommandEvent> {
+    if (interaction.applicationId != appId) return@on // Ignore commands that aren't ours.
     val map = when (this) {
         is GuildChatInputEvent -> chatInputExecutions
         is GuildMessageCommandEvent -> messageCommandExecutions
         is GuildUserCommandEvent -> userCommandExecutions
     } as? ExecutionMap<GuildAppCommandEvent> ?: error("Unspecified GuildAppCommandEvent instance ${this::class}.")
-    val debuggableExecution = map[interaction.invokedCommandId]
-        ?: return@on commandLogger.debug { "Unknown command \"${interaction.invokedCommandName}\" of type <${this::class}> was invoked." }
+    val execution = map[interaction.invokedCommandId]
+        ?: return@on commandLogger.debug { "Unknown command `/${interaction.invokedCommandName}` of type <${this::class}> was invoked." }
+    val loggerPrefix = "[Interaction ${interaction.id}]"
+    logger.debug { "$loggerPrefix Executing function `/${interaction.invokedCommandName}`, type <${this::class}>" }
     try {
-        debuggableExecution.invoke(this)
+        execution(this)
+        logger.debug { "$loggerPrefix Finished executing function `/${interaction.invokedCommandName}`" }
     } catch (exception: Exception) {
-        commandLogger.warn(exception) { debuggableExecution }
-        val content = if (exception is IllegalStateException) "${Emojis.x} An internal server error occurred."
-        else "${Emojis.x} ${exception.message}"
+        commandLogger.warn(exception) { "$loggerPrefix An execution occurred while invoking command `/${interaction.invokedCommandName}.`" }
         interaction.respondEphemeral {
-            this.content = content
+            this.content = if (exception is IllegalStateException) "${Emojis.x} An internal server error occurred."
+            else "${Emojis.x} ${exception.message}"
         }
     }
 }
 
-// Source = mu.internal.KLoggerNameResolver.name
-private fun name(block: CommandExecution<*>): String {
-    val name = block.javaClass.name
-    return when {
-        "Kt$" in name -> name.substringBefore("Kt$")
-        "$" in name -> name.substringBefore("$")
-        else -> name
-    }
-}
-
-private inline fun <reified T : GuildAppCommandEvent> GuildApplicationCommand.debuggable(
-    noinline block: CommandExecution<T>
-): DebuggableExecution<T> {
-    val execution = DebuggableExecution(block, T::class)
-    commandLogger.debug { "Registering command \"$name\" of type <${T::class}> from <${execution.blockLocation}>" }
-    return execution
-}
-
-class DebuggableExecution<T : GuildAppCommandEvent> internal constructor(
-    private val block: CommandExecution<T>,
-    inputClass: KClass<T>
-) : CommandExecution<T> by block {
-    private val inputClassName = inputClass.simpleName
-    internal val blockLocation = name(block)
-    override fun toString(): String =
-        "Command execution of type <$inputClassName> defined in <$blockLocation> resulted in an error."
-}
-
-val required: BaseChoiceBuilder<*>.() -> Unit = { required = true }
-val notRequired: BaseChoiceBuilder<*>.() -> Unit = { required = false }
+val required: OptionsBuilder.() -> Unit = { required = true }
+val notRequired: OptionsBuilder.() -> Unit = { required = false }
 
 suspend fun registerAllCommands() {
     val commands = guild.getApplicationCommands().filter { it.applicationId == appId }.toList()
@@ -117,4 +95,6 @@ suspend fun registerAllCommands() {
         it.delete()
     }
     _signupCommand()
+    _verificationCommand()
+    _profileCommand()
 }
