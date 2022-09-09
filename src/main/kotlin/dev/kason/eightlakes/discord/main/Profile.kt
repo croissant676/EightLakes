@@ -18,6 +18,7 @@ suspend fun _profileCommand() = chatInputCommand(
             title = "${user.name()}'s profile"
             description = student.biography ?: "A SLHS student."
             image = user.avatar?.url ?: user.defaultAvatar.url
+            user.name()
         }
     }
 }

@@ -23,3 +23,7 @@ fun illegalArg(message: String, cause: Throwable? = null): Nothing =
 
 suspend fun <T> suspendTransaction(block: suspend Transaction.() -> T): T =
     newSuspendedTransaction(Dispatchers.IO, statement = block)
+
+// Source: https://stackoverflow.com/questions/52042903/capitalise-every-word-in-string-with-extension-function
+fun String.capitalizeWords(): String =
+    split(" ").joinToString(" ") { it.replaceFirstChar(Char::uppercase) }

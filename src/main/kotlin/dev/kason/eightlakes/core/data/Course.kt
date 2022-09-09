@@ -6,8 +6,8 @@ import org.jetbrains.exposed.dao.id.*
 object Courses : IntIdTable("courses") {
     val courseName = varchar("name", 255).index()
     val courseLevel = enumeration<CourseLevel>("level")
-    val discordRole = snowflake("role_id")
-    val discordChannel = snowflake("channel_id").index()
+    val discordRole = snowflake("role_id").nullable()
+    val discordChannel = snowflake("channel_id").index().nullable()
 }
 
 class Course(id: EntityID<Int>) : IntEntity(id) {

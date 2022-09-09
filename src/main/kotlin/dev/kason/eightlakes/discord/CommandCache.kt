@@ -49,11 +49,11 @@ object CommandCache {
 }
 
 inline fun <reified T : GuildApplicationCommand> CommandCache.retrieveOfType(): List<T> {
-    val type = when (T::class) {
+    val type = when (val kClass = T::class) {
         GuildChatInputCommand::class -> ApplicationCommandType.ChatInput
         GuildMessageCommand::class -> ApplicationCommandType.Message
         GuildUserCommand::class -> ApplicationCommandType.User
-        else -> error("Unknown type <${T::class}>")
+        else -> error("Unknown type <$kClass>")
     }
     return retrieveOfType(type)
 }
