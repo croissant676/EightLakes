@@ -26,7 +26,10 @@ suspend fun _signupCommand() = chatInputCommand(
     val middle = args["middle"]
     val preferred = args["preferred"]
     val discordId = interaction.user.id
-    val (month, day, year) = birthday.split("/").map { it.toInt() }
+    val (month, day, year) = birthday.split("/").map {
+        it.toIntOrNull()
+            ?: illegalArg("Could not parse `$it` into a number (for the date part). Make sure that your message is in the format `MM/dd/yyyy`")
+    }
     val date = LocalDate(year, month, day)
     registerStudent(
         first,

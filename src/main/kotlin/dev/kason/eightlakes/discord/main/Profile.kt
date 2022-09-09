@@ -1,5 +1,6 @@
 package dev.kason.eightlakes.discord.main
 
+import dev.kason.eightlakes.core.englishOrdinal
 import dev.kason.eightlakes.discord.*
 import dev.kord.core.behavior.interaction.respondPublic
 import dev.kord.rest.builder.interaction.user
@@ -15,10 +16,12 @@ suspend fun _profileCommand() = chatInputCommand(
     val user = interaction.user
     interaction.respondPublic {
         embed {
-            title = "${user.name()}'s profile"
+            title = "${user.nameWithDiscriminator}'s profile"
             description = student.biography ?: "A SLHS student."
             image = user.avatar?.url ?: user.defaultAvatar.url
-            user.name()
+            footer {
+                text = "${user.order().englishOrdinal()} member"
+            }
         }
     }
 }

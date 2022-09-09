@@ -10,7 +10,6 @@ import dev.kord.rest.builder.channel.*
 import dev.kord.rest.builder.role.RoleCreateBuilder
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import uy.klutter.config.typesafe.value
 import kotlin.contracts.*
 import kotlin.system.measureTimeMillis
 
@@ -27,7 +26,7 @@ private val orderMapInitialized: Boolean get() = _serverOrderMap.isNotEmpty()
 
 suspend fun Member.order(): Int {
     if (!orderMapInitialized) generateServerOrderMap()
-    return _serverOrderMap[this] ?: error("Member $displayName")
+    return _serverOrderMap[this] ?: error("Member $nameWithDiscriminator could not be found in the map.")
 }
 
 private suspend fun generateServerOrderMap() = withContext(Dispatchers.IO) {
@@ -41,9 +40,6 @@ private suspend fun generateServerOrderMap() = withContext(Dispatchers.IO) {
     }
     logger.info { "Finished generating server order in $time ms." }
 }
-
-
-private val searchForRoles = config.value("bot.search-for-roles").asBoolean(true)
 
 // Returns the role if it already exists or creates a new one.
 @OptIn(ExperimentalContracts::class)

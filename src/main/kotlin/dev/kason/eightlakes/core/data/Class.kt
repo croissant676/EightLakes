@@ -20,6 +20,7 @@ class CourseClass(id: EntityID<Int>) : IntEntity(id) {
     var teacher by Teacher referencedOn CourseClasses.teacher
     var period by CourseClasses.period
     var discordRole by CourseClasses.discordRole
+    val students by StudentClass referrersOn StudentClasses.courseClass
 }
 
 object StudentClasses : IntIdTable("student_classes") {

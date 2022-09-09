@@ -37,7 +37,7 @@ val appId = Snowflake(config.getLong("bot.appId"))
 
 @OptIn(PrivilegedIntent::class)
 suspend fun main() {
-    logger.info { "Starting application: Eight Lakes." }
+    logger.info { "Starting application. May take a while to startup (around 10 - 20 seconds)" }
     _kord = Kord(config.getString("bot.token")) {
         stackTraceRecovery = true
     }

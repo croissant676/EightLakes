@@ -23,15 +23,8 @@ suspend fun registerCourse(
         Course.new {
             this.courseName = _fullName.capitalizeWords()
             this.courseLevel = courseLevel
-        }.also {
-            if (createRole) createRole(it)
-            if (createChannel) createChannel(it)
         }
     }
-}
-
-private suspend fun createRole(course: Course) {
-
 }
 
 private suspend fun createChannel(course: Course) {

@@ -76,14 +76,13 @@ private suspend fun createVerificationFor(student: Student) {
 suspend fun finishVerification(
     token: String,
     discordId: Snowflake
-): Student {
-    val verification = suspendTransaction {
-        StudentVerification.find(StudentVerifications.token eq token).toList().firstOrNull()
-    } ?: illegalArg("Could not find a verification with the token $token.")
+): Student = suspendTransaction {
+    val verification = StudentVerification.find(StudentVerifications.token eq token).toList().firstOrNull()
+        ?: illegalArg("Could not find a verification with the token $token.")
     if (verification.isExpired) illegalArg("The verification has already expired.")
     val student = verification.student
     if (student.discordId != discordId) {
         illegalArg("Please use the same account as the one you used to signup.")
     }
-    return student
+    return@suspendTransaction student
 }

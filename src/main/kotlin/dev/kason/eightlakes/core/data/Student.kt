@@ -32,7 +32,10 @@ class Student(id: EntityID<Int>) : IntEntity(id) {
 
     val classes by StudentClass referrersOn StudentClasses.student
 
-    inline val email: String get() = "$studentId@students.katyisd.org"
+    val email: String get() = "$studentId@students.katyisd.org"
+    val hasPreferredName: Boolean get() = preferredName != null
+    val preferredOrFirst: String get() = preferredName ?: firstName
+    val descriptor: String get() = "$firstName ${middleName.orEmpty()} $lastName" + if (hasPreferredName) " ($preferredName)" else ""
 }
 
 object StudentVerifications : IntIdTable("student_verifications") {
@@ -53,7 +56,7 @@ class StudentVerification(id: EntityID<Int>) : IntEntity(id) {
     private var _expiredCache: Boolean = false
     val isExpired: Boolean
         get() {
-            if (!_expiredCache) _expiredCache = Clock.System.now() < expirationDate
+            if (!_expiredCache) _expiredCache = Clock.System.now() > expirationDate
             return _expiredCache
         }
 }
