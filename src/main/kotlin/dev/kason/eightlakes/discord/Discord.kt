@@ -52,7 +52,7 @@ suspend fun role(
         it.name == builder.name
     } ?: guild.createRole {
         name = builder.name
-        reason = builder.name
+        reason = builder.reason
         color = builder.color
         hoist = builder.hoist
         icon = builder.icon
@@ -85,7 +85,7 @@ suspend inline fun category(
 ): Category = guild.channels.filterIsInstance<Category>()
     .firstOrNull { it.name.equals(name, ignoreCase = true) } ?: guild.createCategory(name, block)
 
-val studentPermissions = Permissions {
+val defaultPermissions = Permissions {
     +Permission.ViewChannel
     +Permission.SendMessages
     +Permission.SendMessagesInThreads

@@ -67,12 +67,18 @@ suspend fun _adminCourseCommands() = chatInputCommand(
             notRequired
         )
     }
-    subCommand("view", "Returns an embed containing all the courses") {
-        int("page", "The page number. Each page is 5 courses.", notRequired)
-    }
     defaultMemberPermissions = Permissions(Permission.Administrator)
 }.onExecute {
     val subcommand = interaction.command as dev.kord.core.entity.interaction.SubCommand
+
+    // Helper method
+    suspend fun GuildChatInputEvent.getCourse(): Course {
+        val courseName = interaction.command.strings["course"]!!
+        val course = suspendTransaction {
+            Course.find(Courses.courseName eq courseName).firstOrNull()
+        } ?: illegalArg("Could not find a course with name `$courseName`")
+        return course
+    }
     when (subcommand.name) {
         "create" -> {
             val name by interaction.command.strings
@@ -87,10 +93,7 @@ suspend fun _adminCourseCommands() = chatInputCommand(
         }
         "setrole" -> {
             val role by interaction.command.roles
-            val courseName by interaction.command.strings
-            val course = suspendTransaction {
-                Course.find(Courses.courseName eq courseName).firstOrNull()
-            } ?: illegalArg("Could not find a course with name `$courseName`")
+            val course = getCourse()
             course.initRole(role)
             interaction.respondPublic {
                 content =
@@ -99,10 +102,7 @@ suspend fun _adminCourseCommands() = chatInputCommand(
         }
         "role" -> {
             val name = interaction.command.strings["name"]
-            val courseName by interaction.command.strings
-            val course = suspendTransaction {
-                Course.find(Courses.courseName eq courseName).firstOrNull()
-            } ?: illegalArg("Could not find a course with name `$courseName`")
+            val course = getCourse()
             course.createRole(name)
             interaction.respondPublic {
                 content =
@@ -111,10 +111,7 @@ suspend fun _adminCourseCommands() = chatInputCommand(
         }
         "setchannel" -> {
             val channel by interaction.command.channels
-            val courseName by interaction.command.strings
-            val course = suspendTransaction {
-                Course.find(Courses.courseName eq courseName).firstOrNull()
-            } ?: illegalArg("Could not find a course with name `$courseName`")
+            val course = getCourse()
             course.initChannel(Channel.from(channel.data, kord) as TextChannel)
             interaction.respondPublic {
                 content =
@@ -122,24 +119,13 @@ suspend fun _adminCourseCommands() = chatInputCommand(
             }
         }
         "channel" -> {
+            val course = getCourse()
             val name = interaction.command.strings["name"]
-            val courseName by interaction.command.strings
-            val course = suspendTransaction {
-                Course.find(Courses.courseName eq courseName).firstOrNull()
-            } ?: illegalArg("Could not find a course with name `$courseName`")
             val channel = course.createChannel(name)
             interaction.respondPublic {
                 content =
                     "${Emojis.whiteCheckMark} You set the channel for `${course.courseName}` as ${channel.mention} successfully."
             }
-        }
-        "view" -> {
-            val page = interaction.command.integers["page"] ?: 1
-            val range = ((page - 1) * 5 + 1).toInt()..(page * 5).toInt()
-            val courses = suspendTransaction {
-                Course.forIds(range.toList()).toList()
-            }
-
         }
     }
 }

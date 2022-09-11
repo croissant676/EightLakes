@@ -1,14 +1,18 @@
 package dev.kason.eightlakes.core
 
+import dev.kason.eightlakes.*
 import dev.kason.eightlakes.core.data.*
-import dev.kason.eightlakes.random
+import dev.kason.eightlakes.discord.*
+import dev.kord.common.Color
 import dev.kord.common.entity.Snowflake
+import dev.kord.core.entity.Role
 import io.ktor.util.*
 import kotlinx.datetime.*
 import net.axay.simplekotlinmail.delivery.send
 import net.axay.simplekotlinmail.email.emailBuilder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import uy.klutter.config.typesafe.value
 import kotlin.time.Duration.Companion.hours
 
 private val studentIdRegex = Regex("[A-Za-z]\\d{7}")
@@ -73,6 +77,20 @@ private suspend fun createVerificationFor(student: Student) {
     }.send()
 }
 
+private var _verifiedRole: Role? = null
+
+suspend fun verifiedRole(): Role {
+    if (_verifiedRole != null) return _verifiedRole!!
+    val roleId = config.value("bot.verified-role").asLongOrNull()
+    _verifiedRole = if (roleId == null) {
+        role {
+            this.name = "Los Pobrecitos"
+            this.color = Color(18, 207, 132)
+        }
+    } else guild.getRole(Snowflake(roleId))
+    return _verifiedRole!!
+}
+
 suspend fun finishVerification(
     token: String,
     discordId: Snowflake
@@ -84,5 +102,7 @@ suspend fun finishVerification(
     if (student.discordId != discordId) {
         illegalArg("Please use the same account as the one you used to signup.")
     }
+    val member = student.member()
+    member.addRole(verifiedRole().id, "Student has been verified")
     return@suspendTransaction student
 }

@@ -89,7 +89,7 @@ class Course(id: EntityID<Int>) : IntEntity(id) {
                 denied = Permissions { +Permission.ViewChannel }
             }
             addRoleOverwrite(role.id) {
-                allowed = studentPermissions
+                allowed = defaultPermissions
             }
         }
         suspendTransaction {
@@ -105,7 +105,7 @@ class Course(id: EntityID<Int>) : IntEntity(id) {
                 denied = Permissions { +Permission.ViewChannel }
             }
             addRoleOverwrite(role.id) {
-                allowed = studentPermissions
+                allowed = defaultPermissions
             }
         }
         suspendTransaction {
@@ -137,7 +137,7 @@ class Course(id: EntityID<Int>) : IntEntity(id) {
     }
 
     override fun toString(): String {
-        return "Course(courseName='$courseName', courseLevel=$courseLevel, discordRole=$discordRole, discordChannel=$discordChannel)"
+        return "Course: '$courseName', id: '$id')"
     }
 
 

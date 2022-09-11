@@ -17,7 +17,7 @@ suspend fun _profileCommand() = chatInputCommand(
     interaction.respondPublic {
         embed {
             title = "${user.nameWithDiscriminator}'s profile"
-            description = student.biography ?: "A SLHS student."
+            description = student.biography ?: ""
             image = user.avatar?.url ?: user.defaultAvatar.url
             footer {
                 text = "${user.order().englishOrdinal()} member"

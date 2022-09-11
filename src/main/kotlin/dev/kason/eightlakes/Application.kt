@@ -55,6 +55,8 @@ suspend fun main() {
     registerCommandListener()
     registerMailer()
     registerAllCommands()
+    registerMessageListener()
+    registerCountingBotListener()
     kord.login {
         intents {
             +Intents.all
