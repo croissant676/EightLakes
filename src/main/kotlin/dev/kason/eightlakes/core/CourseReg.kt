@@ -7,9 +7,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 // before calling this function.
 suspend fun registerCourse(
     _fullName: String,
-    _courseLevel: String?,
-    createRole: Boolean,
-    createChannel: Boolean
+    _courseLevel: String?
 ): Course {
     val lowercase = _fullName.lowercase()
     val courseLevel = when {
@@ -19,15 +17,11 @@ suspend fun registerCourse(
         "ap" in lowercase -> CourseLevel.AP
         else -> CourseLevel.Other
     }
-    return newSuspendedTransaction {
+    val course = newSuspendedTransaction {
         Course.new {
             this.courseName = _fullName.capitalizeWords()
             this.courseLevel = courseLevel
         }
     }
+    return course
 }
-
-private suspend fun createChannel(course: Course) {
-
-}
-

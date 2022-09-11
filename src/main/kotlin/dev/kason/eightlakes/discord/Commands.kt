@@ -16,8 +16,8 @@ typealias GuildChatInputEvent = GuildChatInputCommandInteractionCreateEvent
 typealias GuildUserCommandEvent = GuildUserCommandInteractionCreateEvent
 typealias GuildMessageCommandEvent = GuildMessageCommandInteractionCreateEvent
 typealias GuildAppCommandEvent = GuildApplicationCommandInteractionCreateEvent
-private typealias ExecutionMap<E> = HashMap<Snowflake, SuspendingExecution<E>>
-private typealias SuspendingExecution<T> = suspend T.() -> Unit
+typealias ExecutionMap<E> = HashMap<Snowflake, SuspendingExecution<E>>
+typealias SuspendingExecution<T> = suspend T.() -> Unit
 
 private val commandLogger = KotlinLogging.logger {}
 
@@ -105,4 +105,5 @@ suspend fun registerAllCommands() {
     _signupCommand()
     _verificationCommand()
     _profileCommand()
+    _adminCourseCommands()
 }

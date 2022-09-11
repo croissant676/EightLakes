@@ -25,3 +25,4 @@ suspend fun InteractionCreateEvent.student(): Student {
         """.trimIndent()
     )
 }
+

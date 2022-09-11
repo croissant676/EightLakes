@@ -2,6 +2,7 @@ package dev.kason.eightlakes.discord
 
 import dev.kason.eightlakes.*
 import dev.kason.eightlakes.core.data.Student
+import dev.kord.common.entity.*
 import dev.kord.core.behavior.*
 import dev.kord.core.behavior.channel.createTextChannel
 import dev.kord.core.entity.*
@@ -10,7 +11,6 @@ import dev.kord.rest.builder.channel.*
 import dev.kord.rest.builder.role.RoleCreateBuilder
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlin.contracts.*
 import kotlin.system.measureTimeMillis
 
 @Deprecated(message = "Use Student#member to get a Member, which extends User", ReplaceWith("member()"))
@@ -42,13 +42,9 @@ private suspend fun generateServerOrderMap() = withContext(Dispatchers.IO) {
 }
 
 // Returns the role if it already exists or creates a new one.
-@OptIn(ExperimentalContracts::class)
 suspend fun role(
     block: RoleCreateBuilder.() -> Unit
 ): Role {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
     // because logic may be in the block
     // we only want it to execute once.
     val builder = RoleCreateBuilder().apply(block)
@@ -69,7 +65,7 @@ suspend fun role(
 // Returns the channel if it already exists or creates a new one.
 suspend fun channel(
     name: String,
-    categoryName: String?,
+    categoryName: String? = null,
     block: TextChannelCreateBuilder.() -> Unit = {}
 ): TextChannel {
     if (categoryName != null) {
@@ -87,4 +83,17 @@ suspend inline fun category(
     name: String,
     block: CategoryCreateBuilder.() -> Unit = {}
 ): Category = guild.channels.filterIsInstance<Category>()
-    .firstOrNull { it.name == name } ?: guild.createCategory(name, block)
+    .firstOrNull { it.name.equals(name, ignoreCase = true) } ?: guild.createCategory(name, block)
+
+val studentPermissions = Permissions {
+    +Permission.ViewChannel
+    +Permission.SendMessages
+    +Permission.SendMessagesInThreads
+    +Permission.CreatePublicThreads
+    +Permission.EmbedLinks
+    +Permission.AddReactions
+    +Permission.AttachFiles
+    +Permission.UseExternalEmojis
+    +Permission.ReadMessageHistory
+    +Permission.UseApplicationCommands
+}

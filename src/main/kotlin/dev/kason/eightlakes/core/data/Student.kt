@@ -59,4 +59,26 @@ class StudentVerification(id: EntityID<Int>) : IntEntity(id) {
             if (!_expiredCache) _expiredCache = Clock.System.now() > expirationDate
             return _expiredCache
         }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as StudentVerification
+
+        if (token != other.token) return false
+        if (email != other.email) return false
+        if (expirationDate != other.expirationDate) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = token.hashCode()
+        result = 31 * result + email.hashCode()
+        result = 31 * result + expirationDate.hashCode()
+        return result
+    }
+
+
 }
