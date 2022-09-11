@@ -3,6 +3,7 @@ package dev.kason.eightlakes.discord.main
 import dev.kason.eightlakes.core.*
 import dev.kason.eightlakes.core.data.*
 import dev.kason.eightlakes.discord.*
+import dev.kason.eightlakes.discord.coursereg.allCourseText
 import dev.kord.common.entity.*
 import dev.kord.core.behavior.interaction.respondPublic
 import dev.kord.core.entity.channel.*
@@ -67,6 +68,7 @@ suspend fun _adminCourseCommands() = chatInputCommand(
             notRequired
         )
     }
+    subCommand("view", "View all the courses")
     defaultMemberPermissions = Permissions(Permission.Administrator)
 }.onExecute {
     val subcommand = interaction.command as dev.kord.core.entity.interaction.SubCommand
@@ -125,6 +127,11 @@ suspend fun _adminCourseCommands() = chatInputCommand(
             interaction.respondPublic {
                 content =
                     "${Emojis.whiteCheckMark} You set the channel for `${course.courseName}` as ${channel.mention} successfully."
+            }
+        }
+        "view" -> {
+            interaction.respondPublic {
+                content = "Here's a list of all the courses. \n" + allCourseText()
             }
         }
     }

@@ -12,7 +12,7 @@ private const val headerText = """
     If one of your classes is *not* registered, contact an admin.
 """
 
-private suspend fun generateText(): String {
+suspend fun allCourseText(): String {
     val courses = newSuspendedTransaction {
         Course.all().toList()
     }
@@ -27,6 +27,6 @@ private suspend fun generateText(): String {
 
 suspend fun TextChannel.initialize(student: Student) {
     createMessage("Hey, ${student.member().mention}! $headerText")
-    createMessage(generateText())
+    createMessage(allCourseText())
 
 }

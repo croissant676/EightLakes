@@ -59,7 +59,7 @@ suspend fun registerCountingBotListener() {
         val author = message.author
         if (author == null || !author.isBot) return@onMessageCreate // We want only the messages from counting bot.
         if (author.id != countingId) return@onMessageCreate
-        if ("have used **1** guild save!" !in message.content) return@onMessageCreate
+        if ("You have used **1** guild save!" !in message.content) return@onMessageCreate
         val offender = message.mentionedUsers.first().asMember(guild.id)
         offender.addRole(countingLoserRole.id, "Used a guild save.")
         countingChannel.createMessage {
