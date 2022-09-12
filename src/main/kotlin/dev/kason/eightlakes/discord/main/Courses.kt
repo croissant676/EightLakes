@@ -4,7 +4,6 @@ import dev.kason.eightlakes.core.*
 import dev.kason.eightlakes.core.data.*
 import dev.kason.eightlakes.discord.*
 import dev.kason.eightlakes.discord.coursereg.allCourseText
-import dev.kord.common.entity.*
 import dev.kord.core.behavior.interaction.respondPublic
 import dev.kord.core.entity.channel.*
 import dev.kord.rest.builder.interaction.*
@@ -69,18 +68,10 @@ suspend fun _adminCourseCommands() = chatInputCommand(
         )
     }
     subCommand("view", "View all the courses")
-    defaultMemberPermissions = Permissions(Permission.Administrator)
+    disableCommandInGuilds()
 }.onExecute {
     val subcommand = interaction.command as dev.kord.core.entity.interaction.SubCommand
-
     // Helper method
-    suspend fun GuildChatInputEvent.getCourse(): Course {
-        val courseName = interaction.command.strings["course"]!!
-        val course = suspendTransaction {
-            Course.find(Courses.courseName eq courseName).firstOrNull()
-        } ?: illegalArg("Could not find a course with name `$courseName`")
-        return course
-    }
     when (subcommand.name) {
         "create" -> {
             val name by interaction.command.strings
@@ -135,4 +126,12 @@ suspend fun _adminCourseCommands() = chatInputCommand(
             }
         }
     }
+}
+
+private suspend fun GuildChatInputEvent.getCourse(): Course {
+    val courseName = interaction.command.strings["course"]!!
+    val course = suspendTransaction {
+        Course.find(Courses.courseName eq courseName).firstOrNull()
+    } ?: illegalArg("Could not find a course with name `$courseName`")
+    return course
 }

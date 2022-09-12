@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.toList
 @Suppress("MemberVisibilityCanBePrivate")
 object CommandCache {
 
-    // TODO use set
     private val commandMap = Array(3) {
         mutableListOf<GuildApplicationCommand>()
     }

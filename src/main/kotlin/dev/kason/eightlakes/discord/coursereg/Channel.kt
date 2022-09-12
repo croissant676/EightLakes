@@ -5,24 +5,20 @@ import dev.kason.eightlakes.discord.member
 import dev.kord.core.entity.channel.TextChannel
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
-private const val headerText = """
-    This channel will be where you register your classes.
+private val headerText = """
+    Register your classes here.
     
-    We'll ask you what class you have for a given period, and you just need to type the full name of the class.
-    If one of your classes is *not* registered, contact an admin.
-"""
+    For each period, type the full name of the course. For example: `AP Statistics` instead of `Stats`.
+    If one of your classes is *not* listed above, contact an admin.
+""".trimIndent()
 
 suspend fun allCourseText(): String {
-    val courses = newSuspendedTransaction {
-        Course.all().toList()
-    }
+    val courses = newSuspendedTransaction { Course.all().toList() }
     return courses.joinToString(
         prefix = "```\n",
         postfix = "```",
         separator = "\n"
-    ) {
-        "${it.id} - ${it.courseName}"
-    }
+    ) { "${it.id} - ${it.courseName}" }
 }
 
 suspend fun TextChannel.initialize(student: Student) {
