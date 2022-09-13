@@ -8,5 +8,5 @@ suspend fun _assignmentCommand() = chatInputCommand(
 ) {
 
 }.onExecute {
-
+    interaction
 }
