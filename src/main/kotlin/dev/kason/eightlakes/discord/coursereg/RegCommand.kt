@@ -15,4 +15,6 @@ suspend fun _registrationCommand() = chatInputCommand(
     "Register your courses."
 ) {
 
+}.onExecute {
+
 }

@@ -3,6 +3,7 @@ package dev.kason.eightlakes
 import dev.kason.eightlakes.core.*
 import dev.kason.eightlakes.core.data.*
 import dev.kason.eightlakes.discord.*
+import dev.kason.eightlakes.discord.coursereg.Registrations
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.entity.*
@@ -26,6 +27,7 @@ val guild: Guild get() = _guild!!
 val logger = KotlinLogging.logger { }
 
 val random = SecureRandom().asKotlinRandom()
+
 
 private var _database: Database? = null
 val database: Database get() = _database!!
@@ -76,6 +78,7 @@ private suspend fun updateTablesAndColumns() = suspendTransaction {
         Courses,
         Students,
         StudentVerifications,
-        Teachers
+        Teachers,
+        Registrations
     )
 }
