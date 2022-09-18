@@ -19,7 +19,7 @@ repositories {
 dependencies {
     implementation("dev.kord:kord-core:0.8.0-M15")
     implementation("dev.kord.x:emoji:0.5.0")
-    implementation("ch.qos.logback:logback-classic:1.2.11")
+    implementation("ch.qos.logback:logback-classic:1.4.0")
     implementation("org.jetbrains.exposed:exposed-core:0.39.2")
     implementation("org.jetbrains.exposed:exposed-dao:0.39.2")
     implementation("org.jetbrains.exposed:exposed-jdbc:0.39.2")
@@ -27,6 +27,7 @@ dependencies {
     implementation("net.axay:simplekotlinmail-core:1.4.0")
     implementation("net.axay:simplekotlinmail-client:1.4.0")
     implementation("org.postgresql:postgresql:42.5.0")
+    implementation("org.kodein.di:kodein-di:7.12.0")
     implementation("uy.kohesive.klutter:klutter-config-typesafe:3.0.0")
     testImplementation(kotlin("test"))
     testImplementation("io.kotest:kotest-runner-junit5:5.4.2")
