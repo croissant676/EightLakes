@@ -13,6 +13,7 @@ class StudentService(override val di: DI) : DIAware {
     companion object : KLogging()
 
     private val studentIdRegex = Regex("[A-Za-z]\\d{7}")
+    private val verificationService: VerificationService by di.instance()
 
     suspend fun signup(
         firstName: String,
@@ -40,15 +41,18 @@ class StudentService(override val di: DI) : DIAware {
             }
         }
         val birthday = birthdayString.localDate()
-        val student = Student.new {
-            this.firstName = capitalizedFirst
-            this.middleName = capitalizedMiddle
-            this.lastName = capitalizedLast
-            this.preferredName = preferredName?.capitalize()
-            this.studentId = capitalizedId
-            this.discordId = discordUser.id
-            this.birthday = birthday
+        val student = newSuspendedTransaction {
+            Student.new {
+                this.firstName = capitalizedFirst
+                this.middleName = capitalizedMiddle
+                this.lastName = capitalizedLast
+                this.preferredName = preferredName?.capitalize()
+                this.studentId = capitalizedId
+                this.discordId = discordUser.id
+                this.birthday = birthday
+            }
         }
+        verificationService.openVerification(student)
         return student
     }
 
@@ -76,5 +80,6 @@ class StudentService(override val di: DI) : DIAware {
     ): Boolean = none(
         Students.discordId eq discordId
     )
+
 
 }

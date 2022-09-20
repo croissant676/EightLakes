@@ -3,11 +3,11 @@ package dev.kason.eightlakes.utils
 import kotlinx.datetime.LocalDate
 
 fun String.capitalize() = split(" ").joinToString {
-    lowercase().replaceFirstChar { uppercase() }
+    lowercase().replaceFirstChar { it.uppercase() }
 }
 
 fun String.capitalizeLowercase() = split(" ").joinToString {
-    replaceFirstChar { uppercase() }
+    replaceFirstChar { it.uppercase() }
 }
 
 // Pattern MM/dd/yyyy
