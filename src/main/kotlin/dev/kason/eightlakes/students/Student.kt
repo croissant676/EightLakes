@@ -21,19 +21,22 @@ object Students : IntIdTable("students") {
 }
 
 class Student(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<Student>(Students), ModuleProducer {
+    companion object : IntEntityClass<Student>(Students)
+
+    object Loader : ModuleProducer {
         override fun createModule(): DI.Module = DI.Module(name = "student_module") {
             bindSingleton { StudentService(di) }
             bindSingleton { StudentController(di) }
             bindSingleton { VerificationService(di) }
-            bindSingleton { createConfiguration() }
+            bindSingleton { createFreemarkerConfiguration() }
         }
 
-        private fun createConfiguration() = Configuration(Version(2, 3, 31)).apply {
-            setClassForTemplateLoading(EightLakesApp::class.java, "/dev/kason/eightlakes/students/templates/")
-            defaultEncoding = "UTF-8"
-            locale = Locale.getDefault()
-        }
+        private fun createFreemarkerConfiguration() =
+            Configuration(Version(2, 3, 31)).apply {
+                setClassForTemplateLoading(EightLakesApp::class.java, "/dev/kason/eightlakes/students/templates/")
+                defaultEncoding = "UTF-8"
+                locale = Locale.getDefault()
+            }
     }
 
     var firstName by Students.firstName

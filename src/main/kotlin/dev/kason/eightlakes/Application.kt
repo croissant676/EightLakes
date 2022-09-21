@@ -43,7 +43,7 @@ class EightLakesApp(override val di: DI) : ConfigAware(di), CoroutineScope {
     @OptIn(PrivilegedIntent::class)
     suspend fun start() {
         updateDatabase()
-        testOnStart()
+//        testOnStart()
         kord.login {
             intents += Intents.all
             presence {
@@ -79,19 +79,15 @@ class EightLakesApp(override val di: DI) : ConfigAware(di), CoroutineScope {
 }
 
 suspend fun main() {
-    // Initialized before di is created because we need to access suspend (Continuation)
-    val config = loadApplicationConfig()
-    val kord = EightLakesApp.createKord(config)
-    val database = EightLakesApp.connectToDatabase(config) // Must load before tables are loaded in.
     val di = DI {
         fullDescriptionOnError = true
         fullContainerTreeOnError = true
-        bindSingleton { config }
-        bindSingleton { kord }
+        bindSingleton { loadApplicationConfig() }
         bindSingleton { EightLakesApp(di) }
-        bindSingleton { database }
+        bindSingleton { EightLakesApp.connectToDatabase(di.direct.instance()) }
+        bindSingleton { runBlocking { EightLakesApp.createKord(di.direct.instance()) } }
         importAll(
-            Student.createModule()
+            Student.Loader.createModule()
         )
     }
     val app: EightLakesApp = di.direct.instance()
