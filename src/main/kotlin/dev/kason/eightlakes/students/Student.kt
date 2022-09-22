@@ -24,7 +24,7 @@ class Student(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<Student>(Students)
 
     object Loader : ModuleProducer {
-        override fun createModule(): DI.Module = DI.Module(name = "student_module") {
+        override suspend fun createModule(): DI.Module = DI.Module(name = "student_module") {
             bindSingleton { StudentService(di) }
             bindSingleton { StudentController(di) }
             bindSingleton { VerificationService(di) }

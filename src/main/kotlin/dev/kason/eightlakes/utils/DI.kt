@@ -5,7 +5,7 @@ import org.kodein.di.*
 
 interface ModuleProducer {
 
-    fun createModule(): DI.Module
+    suspend fun createModule(): DI.Module
 
 }
 
