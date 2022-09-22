@@ -62,7 +62,7 @@ class EightLakesApp(override val di: DI) : ConfigAware(di), CoroutineScope {
             val kord = createKord(config)
             val application = kord.getApplicationInfo()
             val guild = getGuild(kord, config)
-            return DI.Module("core_module") {
+            return DI.Module("core_module_no_db") {
                 bindSingleton { config }
                 bindSingleton { kord }
                 bindSingleton { application }

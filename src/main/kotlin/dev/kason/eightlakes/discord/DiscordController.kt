@@ -10,13 +10,21 @@ import org.kodein.di.*
 
 private typealias ChatInputExecution = suspend GuildChatInputEvent.() -> Unit
 
+@Suppress("MemberVisibilityCanBePrivate")
 abstract class DiscordController(override val di: DI) : ConfigAware(di) {
 
-    private val kord: Kord by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
-    private val guild: Guild by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
-    private val discordService: DiscordService by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
+    companion object {
+        val Required: OptionsBuilder.() -> Unit = { required = true }
+        val NotRequired: OptionsBuilder.() -> Unit = { required = false }
+    }
+
+    protected val kord: Kord by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
+    protected val guild: Guild by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
+    protected val discordService: DiscordService by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
 
     abstract suspend fun loadCommands()
+
+    // Command
 
     suspend fun chatInputCommand(
         name: String,
@@ -108,6 +116,18 @@ abstract class DiscordController(override val di: DI) : ConfigAware(di) {
         return element
     }
 
+    @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
+    fun GroupCommandBuilder.command(
+        name: String,
+        description: String,
+        builder: SubCommandBuilder.() -> Unit = {}
+    ): SubCommandBuilder {
+        if (options == null) options = mutableListOf()
+        val element = SubCommandBuilder(name, description).apply(builder)
+        options!!.add(element)
+        return element
+    }
+
     context (ChatInputCreateBuilder)
     fun SubCommandBuilder.onExecute(block: ChatInputExecution) {
         val currentExecutionNesting = discordService.subCommandBuilderRegistry[this@ChatInputCreateBuilder.name]!!
@@ -116,7 +136,7 @@ abstract class DiscordController(override val di: DI) : ConfigAware(di) {
 
     fun ChatInputCreateBuilder.group(
         name: String,
-        description: String,
+        description: String = "",
         builder: GroupCommandBuilder.() -> Unit = {}
     ): GroupCommandBuilder {
         if (options == null) options = mutableListOf()
@@ -162,4 +182,10 @@ abstract class DiscordController(override val di: DI) : ConfigAware(di) {
             }
         }
     }
+
+    // Utils
+
+    val GuildChatInputCommandInteraction.strings: Map<String, String>
+        get() = command.strings
+
 }

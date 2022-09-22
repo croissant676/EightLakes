@@ -4,6 +4,7 @@ package dev.kason.eightlakes
 
 import dev.kason.eightlakes.discord.*
 import dev.kord.core.Kord
+import dev.kord.core.behavior.interaction.respondPublic
 import dev.kord.gateway.*
 import io.kotest.core.spec.style.StringSpec
 import org.kodein.di.*
@@ -13,18 +14,10 @@ import org.kodein.di.*
 // inject config: Config, application: Application, kord: Kord, guild: Guild
 // use kotest
 class DiscordServiceTest : StringSpec({
-    beforeAny {
-        val kord: Kord by di.instance()
-        kord.login {
-            intents += Intents.all
-            presence {
-                watching("students suffer")
-            }
-        }
-    }
+
     "test_commands" {
         val modules = setOf(
-            EightLakesApp.createModule(),
+            EightLakesApp.noDatabase(),
             DiscordService.createModule()
         )
         val di = DI {
@@ -33,15 +26,36 @@ class DiscordServiceTest : StringSpec({
         val discordService: DiscordService by di.instance()
         discordService.init()
         val testableController = TestableController(di) {
+            parentCommand("ping", "This may work..") {
+                subCommand("hello", "does this work??") {
 
+                }.onExecute {
+                    interaction.respondPublic { content = "sub commands worked" }
+                }
+                group("pong", "dfdfd") {
+                    command("sport", "ping pong is a sport confirmed") {
+
+                    }.onExecute {
+                        interaction.respondPublic { content = "nested commands work!" }
+                    }
+                }
+            }
         }
         testableController.loadCommands()
+        val kord: Kord by di.instance()
+        kord.login {
+            intents += Intents.all
+            presence {
+                watching("students suffer")
+            }
+        }
     }
     "test_subcommnads" {
 
     }
 })
 
-class TestableController(override val di: DI, val block: suspend DiscordController.() -> Unit) : DiscordController(di) {
+class TestableController(override val di: DI, private val block: suspend DiscordController.() -> Unit) :
+    DiscordController(di) {
     override suspend fun loadCommands() = block()
 }
