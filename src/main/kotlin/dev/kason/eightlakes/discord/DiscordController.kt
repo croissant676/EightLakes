@@ -6,7 +6,6 @@ import dev.kord.core.entity.Guild
 import dev.kord.core.entity.application.*
 import dev.kord.core.entity.interaction.*
 import dev.kord.rest.builder.interaction.*
-import kotlinx.coroutines.launch
 import org.kodein.di.*
 
 private typealias ChatInputExecution = suspend GuildChatInputEvent.() -> Unit
@@ -19,19 +18,11 @@ abstract class DiscordController(override val di: DI) : ConfigAware(di) {
         val NotRequired: OptionsBuilder.() -> Unit = { required = false }
     }
 
-    protected val kord: Kord by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
-    protected val guild: Guild by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
-    protected val discordService: DiscordService by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
+    protected val kord: Kord by lazy { di.direct.instance() }
+    protected val guild: Guild by lazy { di.direct.instance() }
+    protected val discordService: DiscordService by lazy { di.direct.instance() }
 
     abstract suspend fun loadCommands()
-
-    // Command
-
-    init {
-        kord.launch {
-            discordService.register(this@DiscordController)
-        }
-    }
 
     suspend fun chatInputCommand(
         name: String,

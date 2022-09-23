@@ -63,6 +63,7 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
     @Suppress("UNCHECKED_CAST")
     suspend fun init() {
         if (allCommands.isEmpty()) loadCommandsFromKord()
+        initControllers()
         kord.on<GuildAppCommandEvent> {
             if (interaction.applicationId != application.id) return@on
             val executionMap = when (interaction.invokedCommandType) {
@@ -113,12 +114,16 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
         allCommands += chatInputCommand
     }
 
-    private val controllers = mutableSetOf<DiscordController>()
-    val discordControllers: List<DiscordController> get() = controllers.toList()
+    val controllers = mutableSetOf<DiscordController>()
 
-    suspend fun register(discordController: DiscordController) {
-        controllers += discordController
-        discordController.loadCommands()
+    private suspend fun initControllers() {
+        controllers.forEach {
+            kotlin.runCatching {
+                it.loadCommands()
+            }.onFailure { exception ->
+                logger.warn(exception) { "An exception occurred while loading commands for controller ${it::class.simpleName}." }
+            }
+        }
     }
 
     // Subcommand nesting

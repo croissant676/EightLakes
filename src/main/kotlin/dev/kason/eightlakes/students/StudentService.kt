@@ -5,6 +5,7 @@ import dev.kason.eightlakes.utils.*
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.entity.*
+import dev.kord.rest.builder.message.EmbedBuilder
 import mu.KLogging
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -85,7 +86,12 @@ class StudentService(override val di: DI) : DIAware {
         Students.discordId eq discordId
     )
 
-    suspend fun get(discordId: Snowflake): Student? =
+    suspend fun get(discordId: Snowflake): Student =
+        newSuspendedTransaction {
+            Student.find { Students.discordId eq discordId }.first()
+        }
+
+    suspend fun getOrNull(discordId: Snowflake): Student? =
         newSuspendedTransaction {
             Student.find { Students.discordId eq discordId }.firstOrNull()
         }
@@ -106,9 +112,62 @@ class StudentService(override val di: DI) : DIAware {
     suspend fun createScheduleTextBox(student: Student) = buildString {
         val schedule = getSchedule(student)
         appendLine("```")
-        // header
-        val max = schedule.values.maxOfOrNull { it.scheduleDescription.length }
+        val max = schedule.values.maxOfOrNull { it.scheduleDescription.length } ?: 0
+        val lengthOfTable = max + 13
+        appendLine("+" + "-".repeat(lengthOfTable - 2) + "+")
+        appendLine("| Period  | Class".padEnd(max) + "|")
+        appendLine("+" + "-".repeat(lengthOfTable - 2) + "+")
+        for (period in Period.values()) {
+            val courseClass = schedule[period]
+            val description = courseClass?.scheduleDescription ?: "Free"
+            appendLine("| Period ${period.number}" + "| $description".padEnd(max) + "|")
+        }
+        appendLine("+" + "-".repeat(lengthOfTable - 2) + "+")
+        appendLine("```")
+    }
 
+    context(EmbedBuilder) suspend fun createProfileEmbed(student: Student) {
+        title = "Profile for ${student.fullNameWithMiddleInitial}"
+        val member = guild.member(student)
+        // new version with fields
+        field {
+            name = "Student ID"
+            value = student.studentId
+        }
+        field {
+            name = "Birthday"
+            value = student.birthday.toFormattedString()
+        }
+        field {
+            name = "Discord"
+            value = student.mention
+        }
+        field {
+            name = "Joined"
+            value = member.joinedAt.toFormattedString()
+        }
+        field {
+            name = "Joined Eight Lakes"
+            value = student.createdAt.toFormattedString()
+        }
+        footer {
+            text = "If you need to want to change any of this information, please contact a staff member."
+        }
+        image = member.avatar?.url ?: member.defaultAvatar.url
+    }
+
+    // createScheduleEmbed
+    context (EmbedBuilder) suspend fun createScheduleEmbed(student: Student) {
+        title = "Schedule for ${student.fullNameWithMiddleInitial}"
+        val schedule = getSchedule(student)
+        for (period in Period.values()) {
+            val courseClass = schedule[period]
+            val description = courseClass?.scheduleDescription ?: "Free"
+            field {
+                name = "Period ${period.number}"
+                value = description
+            }
+        }
     }
 
 }

@@ -43,9 +43,11 @@ class EightLakesApp(override val di: DI) : ConfigAware(di), CoroutineScope {
     }
 
     private val kord: Kord by di.instance()
+    private val discordService: DiscordService by di.instance()
 
     @OptIn(PrivilegedIntent::class)
     suspend fun start() {
+        discordService.init()
         kord.login {
             intents += Intents.all
             presence {

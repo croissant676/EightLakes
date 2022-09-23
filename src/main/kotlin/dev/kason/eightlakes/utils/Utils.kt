@@ -1,6 +1,6 @@
 package dev.kason.eightlakes.utils
 
-import kotlinx.datetime.LocalDate
+import kotlinx.datetime.*
 
 fun String.capitalize() = split(" ").joinToString {
     lowercase().replaceFirstChar { it.uppercase() }
@@ -21,6 +21,22 @@ fun String.localDate(): LocalDate = try {
 } catch (exception: Exception) {
     throw IllegalArgumentException("Could not parse string $this into a date.", exception)
 }
+
+fun LocalDate.toFormattedString() = "$monthNumber/$dayOfMonth/$year"
+
+fun LocalTime.toFormattedString() {
+    val hour = if (hour > 12) hour - 12 else hour
+    val amPm = if (hour > 12) "PM" else "AM"
+    "$hour:$minute:$second.$nanosecond $amPm"
+}
+
+fun LocalDateTime.toFormattedString(): String {
+    val time = time
+    val date = date
+    return "${time.toFormattedString()} - ${date.toFormattedString()}"
+}
+
+fun Instant.toFormattedString(): String = toLocalDateTime(TimeZone.currentSystemDefault()).toFormattedString()
 
 fun Int.ordinalString(): String {
     val mod100 = this % 100
