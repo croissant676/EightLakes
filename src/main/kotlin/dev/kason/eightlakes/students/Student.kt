@@ -1,5 +1,6 @@
 package dev.kason.eightlakes.students
 
+import com.typesafe.config.Config
 import dev.kason.eightlakes.EightLakesApp
 import dev.kason.eightlakes.utils.*
 import freemarker.template.*
@@ -24,7 +25,7 @@ class Student(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<Student>(Students)
 
     object Loader : ModuleProducer {
-        override suspend fun createModule(): DI.Module = DI.Module(name = "student_module") {
+        override suspend fun createModule(config: Config): DI.Module = DI.Module(name = "student_module") {
             bindSingleton { StudentService(di) }
             bindSingleton { StudentController(di) }
             bindSingleton { VerificationService(di) }
@@ -50,4 +51,5 @@ class Student(id: EntityID<Int>) : IntEntity(id) {
 
     val email: String get() = "$studentId@students.katyisd.org"
     val preferredOrFirst: String get() = preferredName ?: firstName
+
 }

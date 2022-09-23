@@ -2,7 +2,8 @@ package dev.kason.eightlakes.students
 
 import dev.kason.eightlakes.utils.*
 import dev.kord.common.entity.Snowflake
-import dev.kord.core.entity.User
+import dev.kord.core.Kord
+import dev.kord.core.entity.*
 import mu.KLogging
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -13,7 +14,9 @@ class StudentService(override val di: DI) : DIAware {
     companion object : KLogging()
 
     private val studentIdRegex = Regex("[A-Za-z]\\d{7}")
-    private val verificationService: VerificationService by di.instance()
+    private val verificationService: VerificationService by instance()
+    private val kord: Kord by instance()
+    private val guild: Guild by instance()
 
     suspend fun signup(
         firstName: String,
@@ -80,6 +83,11 @@ class StudentService(override val di: DI) : DIAware {
     ): Boolean = none(
         Students.discordId eq discordId
     )
+
+    suspend fun get(discordId: Snowflake): Student? =
+        newSuspendedTransaction {
+            Student.find { Students.discordId eq discordId }.firstOrNull()
+        }
 
 
 }

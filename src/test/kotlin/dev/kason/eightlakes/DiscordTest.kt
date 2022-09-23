@@ -17,7 +17,7 @@ class DiscordServiceTest : StringSpec({
 
     "test_commands" {
         val modules = setOf(
-            EightLakesApp.noDatabase(),
+            EightLakesApp.createModule(),
             DiscordService.createModule()
         )
         val di = DI {
@@ -25,7 +25,7 @@ class DiscordServiceTest : StringSpec({
         }
         val discordService: DiscordService by di.instance()
         discordService.init()
-        val testableController = TestableController(di) {
+        TestableController(di) {
             parentCommand("ping", "This may work..") {
                 subCommand("hello", "does this work??") {
 
@@ -41,7 +41,6 @@ class DiscordServiceTest : StringSpec({
                 }
             }
         }
-        testableController.loadCommands()
         val kord: Kord by di.instance()
         kord.login {
             intents += Intents.all

@@ -1,7 +1,8 @@
 package dev.kason.eightlakes.courses
 
 import dev.kason.eightlakes.utils.snowflake
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.dao.id.*
 
 object Courses : IntIdTable("courses") {
     val courseName = varchar("course_name", 255)
@@ -10,6 +11,11 @@ object Courses : IntIdTable("courses") {
     val discordChannel = snowflake("discord_channel")
 }
 
-class Course {
+class Course(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<Course>(Courses)
 
+    var courseName by Courses.courseName
+    var courseLevel by Courses.courseLevel
+    var discordRole by Courses.discordRole
+    var discordChannel by Courses.discordChannel
 }

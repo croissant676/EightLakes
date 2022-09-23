@@ -21,3 +21,14 @@ fun String.localDate(): LocalDate = try {
 } catch (exception: Exception) {
     throw IllegalArgumentException("Could not parse string $this into a date.", exception)
 }
+
+fun Int.ordinalString(): String {
+    val mod100 = this % 100
+    return this.toString() + when {
+        mod100 == 11 || mod100 == 12 || mod100 == 13 -> "th"
+        mod100 % 10 == 1 -> "st"
+        mod100 % 10 == 2 -> "nd"
+        mod100 % 10 == 3 -> "rd"
+        else -> "th"
+    }
+}

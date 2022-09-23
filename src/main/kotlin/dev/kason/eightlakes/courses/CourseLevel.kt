@@ -7,12 +7,14 @@ enum class CourseLevel {
     Other;
 
     companion object {
-        fun parse(courseName: String) = when {
+
+        fun findInCourse(courseName: String) = when {
             "KAP" in courseName -> KAP
             "AP" in courseName -> AP
             "Aca" in courseName -> Academic
             else -> Other
         }
+
     }
 
 }

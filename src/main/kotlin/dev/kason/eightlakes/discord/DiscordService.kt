@@ -1,5 +1,6 @@
 package dev.kason.eightlakes.discord
 
+import com.typesafe.config.Config
 import dev.kason.eightlakes.utils.*
 import dev.kord.common.entity.*
 import dev.kord.core.*
@@ -23,7 +24,7 @@ private typealias CommandExecution<T> = suspend T.() -> Unit
 
 class DiscordService(override val di: DI) : ConfigAware(di) {
     companion object : KLogging(), ModuleProducer {
-        override suspend fun createModule(): DI.Module {
+        override suspend fun createModule(config: Config): DI.Module {
             return DI.Module(name = "discord_module") {
                 bindSingleton { DiscordService(di) }
 

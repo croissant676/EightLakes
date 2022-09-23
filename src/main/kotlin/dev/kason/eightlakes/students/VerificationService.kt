@@ -1,12 +1,14 @@
 package dev.kason.eightlakes.students
 
 import dev.kason.eightlakes.utils.ConfigAware
+import dev.kord.core.entity.Member
 import freemarker.template.Configuration
 import io.ktor.util.*
 import kotlinx.datetime.Clock
 import mu.KLogging
 import net.axay.simplekotlinmail.delivery.*
 import net.axay.simplekotlinmail.email.emailBuilder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.kodein.di.*
 import uy.klutter.config.typesafe.value
@@ -76,5 +78,14 @@ class VerificationService(override val di: DI) : ConfigAware(di) {
             )
             withHTMLText(stringWriter.toString())
         }.send()
+    }
+
+    suspend fun close(token: String, user: Member) = newSuspendedTransaction {
+        val verification =
+            StudentVerification.find(StudentVerifications.token eq token).first()
+        require(Clock.System.now() < verification.expirationDate) { "Token has expired already. " }
+        val student = verification.student
+        require(user.id == student.discordId) { "Please use the same discord account that used to sign up." }
+        student.isVerified = true
     }
 }
