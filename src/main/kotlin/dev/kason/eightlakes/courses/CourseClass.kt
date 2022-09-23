@@ -36,3 +36,8 @@ class StudentClass(id: EntityID<Int>) : IntEntity(id) {
     var notes by StudentClasses.notes
     var notification by StudentClasses.notification
 }
+
+// Utils
+
+val CourseClass.scheduleDescription: String
+    get() = "${course.courseName} - ${teacher.name}"

@@ -1,5 +1,6 @@
 package dev.kason.eightlakes.students
 
+import dev.kason.eightlakes.courses.*
 import dev.kason.eightlakes.utils.*
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
@@ -89,5 +90,25 @@ class StudentService(override val di: DI) : DIAware {
             Student.find { Students.discordId eq discordId }.firstOrNull()
         }
 
+    suspend fun getSchedule(student: Student): Map<Period, CourseClass> {
+        val map = mutableMapOf<Period, CourseClass>()
+        newSuspendedTransaction {
+            val studentCourseClasses = StudentClass.find { StudentClasses.student eq student.id }
+            studentCourseClasses.forEach {
+                val courseclass = it.courseClass
+                val period = courseclass.period
+                map[period] = courseclass
+            }
+        }
+        return map
+    }
+
+    suspend fun createScheduleTextBox(student: Student) = buildString {
+        val schedule = getSchedule(student)
+        appendLine("```")
+        // header
+        val max = schedule.values.maxOfOrNull { it.scheduleDescription.length }
+
+    }
 
 }
