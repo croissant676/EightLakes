@@ -1,7 +1,6 @@
 package dev.kason.eightlakes
 
 import com.typesafe.config.Config
-import dev.kason.eightlakes.discord.DiscordService
 import dev.kason.eightlakes.students.Student
 import dev.kason.eightlakes.utils.*
 import dev.kord.common.entity.Snowflake
@@ -44,9 +43,11 @@ class EightLakesApp(override val di: DI) : ConfigAware(di), CoroutineScope {
 
     private val kord: Kord by di.instance()
     private val discordService: DiscordService by di.instance()
+    private val eightLakesData: EightLakesData by di.instance()
 
     @OptIn(PrivilegedIntent::class)
     suspend fun start() {
+        eightLakesData.init()
         discordService.init()
         kord.login {
             intents += Intents.all
@@ -67,7 +68,8 @@ suspend fun main() {
     val modules = setOf(
         EightLakesApp.createModule(config),
         Student.Loader.createModule(config),
-        DiscordService.createModule(config)
+        DiscordService.createModule(config),
+        EightLakesData.createModule(config)
     )
     val di = DI {
         fullDescriptionOnError = true

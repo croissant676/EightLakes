@@ -1,8 +1,7 @@
 package dev.kason.eightlakes.students
 
 import com.typesafe.config.Config
-import dev.kason.eightlakes.EightLakesApp
-import dev.kason.eightlakes.discord.DiscordService
+import dev.kason.eightlakes.*
 import dev.kason.eightlakes.utils.*
 import dev.kord.core.Kord
 import dev.kord.core.entity.Guild
@@ -62,7 +61,7 @@ val Student.preferredOrFirst: String get() = preferredName ?: firstName
 val Student.fullName: String
     get() = listOfNotNull(firstName, middleName, lastName).joinToString(" ")
 val Student.fullNameWithMiddleInitial: String
-    get() = listOfNotNull(firstName, middleName?.let { "$it." }, lastName).joinToString(" ")
+    get() = listOfNotNull(firstName, middleName?.let { "${it.first()}." }, lastName).joinToString(" ")
 
 // add preferred with parentheses if it exists
 val Student.fullNameWithPreferred: String

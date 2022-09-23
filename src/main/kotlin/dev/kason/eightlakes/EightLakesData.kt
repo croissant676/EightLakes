@@ -1,9 +1,12 @@
 package dev.kason.eightlakes
 
 import com.typesafe.config.Config
-import dev.kason.eightlakes.students.Students
+import dev.kason.eightlakes.assignments.*
+import dev.kason.eightlakes.courses.*
+import dev.kason.eightlakes.students.*
 import dev.kason.eightlakes.utils.*
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.kodein.di.*
 
 class EightLakesData(override val di: DI) : ConfigAware(di) {
@@ -11,7 +14,7 @@ class EightLakesData(override val di: DI) : ConfigAware(di) {
         override suspend fun createModule(config: Config): DI.Module {
             return DI.Module(name = "data_module") {
                 bindSingleton { EightLakesData(di) }
-                bindSingleton { connectToDatabase(config) }
+                bindEagerSingleton { connectToDatabase(config) }
             }
         }
 
@@ -29,6 +32,19 @@ class EightLakesData(override val di: DI) : ConfigAware(di) {
     }
 
     private val tables = setOf(
-        Students // add more tables here
+        Students,
+        Courses,
+        CourseClasses,
+        StudentVerifications,
+        StudentClasses,
+        Teachers,
+        Assignments,
+        StudentAssignments
     )
+
+    suspend fun init() {
+        newSuspendedTransaction {
+            SchemaUtils.createMissingTablesAndColumns(*tables.toTypedArray())
+        }
+    }
 }

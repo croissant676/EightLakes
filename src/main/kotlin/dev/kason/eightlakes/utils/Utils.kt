@@ -1,5 +1,6 @@
 package dev.kason.eightlakes.utils
 
+import dev.kord.core.entity.User
 import kotlinx.datetime.*
 
 fun String.capitalize() = split(" ").joinToString {
@@ -24,15 +25,20 @@ fun String.localDate(): LocalDate = try {
 
 fun LocalDate.toFormattedString() = "$monthNumber/$dayOfMonth/$year"
 
-fun LocalTime.toFormattedString() {
+// 5:03:20.232 PM
+// hour:minute:second.millisecond AM/PM
+// fill with 0s if less than 10
+fun LocalTime.toFormattedString(): String {
+    val isAfternoon = hour >= 12
     val hour = if (hour > 12) hour - 12 else hour
-    val amPm = if (hour > 12) "PM" else "AM"
-    "$hour:$minute:$second.$nanosecond $amPm"
+    val minute = if (minute < 10) "0$minute" else minute.toString()
+    val second = if (second < 10) "0$second" else second.toString()
+    val ms = nanosecond / 1_000_000
+    val millisecond = if (ms < 10) "00$ms" else if (ms < 100) "0$ms" else ms.toString()
+    return "$hour:$minute:$second.$millisecond ${if (isAfternoon) "PM" else "AM"}"
 }
 
 fun LocalDateTime.toFormattedString(): String {
-    val time = time
-    val date = date
     return "${time.toFormattedString()} - ${date.toFormattedString()}"
 }
 
@@ -48,3 +54,6 @@ fun Int.ordinalString(): String {
         else -> "th"
     }
 }
+
+val User.nameAndDiscriminator: String
+    get() = username + discriminator

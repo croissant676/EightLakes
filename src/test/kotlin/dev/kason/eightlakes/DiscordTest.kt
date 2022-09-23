@@ -2,12 +2,12 @@
 
 package dev.kason.eightlakes
 
-import dev.kason.eightlakes.discord.*
 import dev.kord.core.Kord
 import dev.kord.core.behavior.interaction.respondPublic
 import dev.kord.gateway.*
 import io.kotest.core.spec.style.StringSpec
 import org.kodein.di.*
+import uy.klutter.config.typesafe.loadApplicationConfig
 
 // set up a test
 // for discord service
@@ -16,16 +16,16 @@ import org.kodein.di.*
 class DiscordServiceTest : StringSpec({
 
     "test_commands" {
+        val config = loadApplicationConfig()
         val modules = setOf(
-            EightLakesApp.createModule(),
-            DiscordService.createModule()
+            EightLakesApp.createModule(config),
+            DiscordService.createModule(config)
         )
         val di = DI {
             importAll(modules)
         }
         val discordService: DiscordService by di.instance()
-        discordService.init()
-        TestableController(di) {
+        discordService.controllers += TestableController(di) {
             parentCommand("ping", "This may work..") {
                 subCommand("hello", "does this work??") {
 
@@ -41,6 +41,7 @@ class DiscordServiceTest : StringSpec({
                 }
             }
         }
+        discordService.init()
         val kord: Kord by di.instance()
         kord.login {
             intents += Intents.all

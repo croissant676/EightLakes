@@ -1,6 +1,6 @@
 package dev.kason.eightlakes.students
 
-import dev.kason.eightlakes.discord.DiscordController
+import dev.kason.eightlakes.DiscordController
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.rest.builder.interaction.*
 import dev.kord.rest.builder.message.modify.embed
@@ -15,7 +15,6 @@ class StudentController(override val di: DI) : DiscordController(di) {
     companion object : KLogging()
 
     override suspend fun loadCommands() {
-        logger.debug { "Loading commands." }
         chatInputCommand("signup", "Sign up to Eight Lakes") {
             string("first", "Your first name, as it would appear on your schedule", Required)
             string("last", "Your last name, as it would appear on your schedule", Required)
@@ -78,7 +77,7 @@ class StudentController(override val di: DI) : DiscordController(di) {
                 }
             }
         }
-        chatInputCommand("schedule", "Generate") {
+        chatInputCommand("schedule", "Displays the schedule of a user") {
             user("user", "The user to generate the schedule for", NotRequired)
         }.onExecute {
             val user = interaction.command.users["user"] ?: interaction.user
@@ -88,7 +87,6 @@ class StudentController(override val di: DI) : DiscordController(di) {
                 embed {
                     studentService.createScheduleEmbed(student)
                 }
-                content = studentService.createScheduleTextBox(student)
             }
         }
     }

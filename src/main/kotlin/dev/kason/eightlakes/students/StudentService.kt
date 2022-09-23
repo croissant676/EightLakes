@@ -109,6 +109,7 @@ class StudentService(override val di: DI) : DIAware {
         return map
     }
 
+    @Deprecated("use createScheduleEmbed instead; also doesn't work", ReplaceWith("createScheduleEmbed(student)"))
     suspend fun createScheduleTextBox(student: Student) = buildString {
         val schedule = getSchedule(student)
         appendLine("```")

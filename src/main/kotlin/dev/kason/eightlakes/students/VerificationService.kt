@@ -2,7 +2,7 @@ package dev.kason.eightlakes.students
 
 import dev.kason.eightlakes.utils.ConfigAware
 import dev.kord.core.entity.Member
-import freemarker.template.Configuration
+import freemarker.template.*
 import io.ktor.util.*
 import kotlinx.datetime.Clock
 import mu.KLogging
@@ -59,17 +59,21 @@ class VerificationService(override val di: DI) : ConfigAware(di) {
         return verification
     }
 
-    private val template by lazy(LazyThreadSafetyMode.NONE) {
+    private val firstTimeTemplate by lazy(LazyThreadSafetyMode.NONE) {
         freemarkerConfig.getTemplate("verification.ftl")
     }
 
-    private suspend fun sendEmail(verification: StudentVerification, student: Student) {
+    private suspend fun sendEmail(
+        verification: StudentVerification,
+        student: Student,
+        template: Template = firstTimeTemplate
+    ) {
         emailBuilder {
             from(emailUsername!!)
             to(verification.email)
             withSubject("Eight Lakes verification")
             val stringWriter = StringWriter()
-            template.process(
+            firstTimeTemplate.process(
                 mapOf(
                     "name" to student.preferredOrFirst,
                     "token" to verification.token,

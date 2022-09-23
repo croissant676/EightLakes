@@ -4,7 +4,7 @@
         <withJansi>true</withJansi>
         <encoder>
             <!-- @formatter:off -->
-            <pattern>| %blue(%-2d{ISO8601}) | %cyan(%-11.-11thread) | %highlight(%-5level) | %magenta(%-20.-20logger) | %msg%n
+            <pattern>| %blue(%-2d{ISO8601}) | %cyan(%-11.-11thread) | %highlight(%-5level) | %magenta(%logger{20}) | %msg%n
             </pattern>
             <!-- @formatter:on -->
         </encoder>

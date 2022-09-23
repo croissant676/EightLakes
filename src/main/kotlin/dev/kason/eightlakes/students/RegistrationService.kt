@@ -1,4 +1,7 @@
 package dev.kason.eightlakes.students
 
-class RegistrationService {
+import org.kodein.di.*
+
+class RegistrationService(override val di: DI) : DIAware {
+
 }

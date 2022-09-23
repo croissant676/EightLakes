@@ -1,4 +1,4 @@
-package dev.kason.eightlakes.discord
+package dev.kason.eightlakes
 
 import dev.kason.eightlakes.utils.ConfigAware
 import dev.kord.core.Kord

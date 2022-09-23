@@ -1,4 +1,4 @@
-package dev.kason.eightlakes.discord
+package dev.kason.eightlakes
 
 import com.typesafe.config.Config
 import dev.kason.eightlakes.utils.*
