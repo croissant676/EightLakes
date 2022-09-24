@@ -1,6 +1,6 @@
 package dev.kason.eightlakes.students
 
-import dev.kason.eightlakes.utils.ConfigAware
+import dev.kason.eightlakes.ConfigAware
 import dev.kord.core.entity.Member
 import freemarker.template.*
 import io.ktor.util.*

@@ -1,6 +1,6 @@
 package dev.kason.eightlakes.courses
 
-import dev.kason.eightlakes.utils.ordinalString
+import dev.kason.eightlakes.ordinalString
 
 enum class Period {
     First,

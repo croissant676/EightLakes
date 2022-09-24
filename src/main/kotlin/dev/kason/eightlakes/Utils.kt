@@ -1,9 +1,14 @@
 @file:Suppress("unused")
 
-package dev.kason.eightlakes.utils
+package dev.kason.eightlakes
 
+import com.typesafe.config.Config
+import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.User
 import kotlinx.datetime.*
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.kodein.di.*
 
 fun String.capitalize() = split(" ").joinToString {
     lowercase().replaceFirstChar { it.uppercase() }
@@ -59,3 +64,42 @@ fun Int.ordinalString(): String {
 
 val User.nameAndDiscriminator: String
     get() = username + discriminator
+
+
+interface ModuleProducer {
+
+    suspend fun createModule(config: Config): DI.Module
+
+}
+
+open class ConfigAware(
+    override val di: DI
+) : DIAware {
+
+    // lazy init because referencing di may result in issues:
+    // see: https://stackoverflow.com/questions/50222139/kotlin-calling-non-final-function-in-constructor-works
+    val config: Config by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
+
+}
+
+class SnowflakeColumnType : ColumnType() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
+    override fun valueFromDB(value: Any): Snowflake = when (value) {
+        is Snowflake -> value
+        is Long -> Snowflake(value)
+        is ULong -> Snowflake(value)
+        is String -> Snowflake(value)
+        else -> error("Could not convert $value into a snowflake.")
+    }
+
+    override fun notNullValueToDB(value: Any): Long = when (value) {
+        is Long -> value
+        is ULong -> value.toLong()
+        is Snowflake -> value.value.toLong()
+        is String -> value.toULong().toLong()
+        else -> error("Could not convert $value into a long.")
+    }
+}
+
+fun Table.snowflake(name: String): Column<Snowflake> =
+    registerColumn(name, SnowflakeColumnType())

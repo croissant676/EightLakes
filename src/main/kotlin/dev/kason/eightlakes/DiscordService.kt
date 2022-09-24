@@ -1,7 +1,6 @@
 package dev.kason.eightlakes
 
 import com.typesafe.config.Config
-import dev.kason.eightlakes.utils.*
 import dev.kord.common.entity.*
 import dev.kord.core.*
 import dev.kord.core.behavior.interaction.respondEphemeral

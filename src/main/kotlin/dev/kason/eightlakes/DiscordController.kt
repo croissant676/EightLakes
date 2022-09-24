@@ -1,6 +1,5 @@
 package dev.kason.eightlakes
 
-import dev.kason.eightlakes.utils.ConfigAware
 import dev.kord.core.Kord
 import dev.kord.core.entity.Guild
 import dev.kord.core.entity.application.*

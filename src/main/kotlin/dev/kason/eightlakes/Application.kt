@@ -2,7 +2,6 @@ package dev.kason.eightlakes
 
 import com.typesafe.config.Config
 import dev.kason.eightlakes.students.Student
-import dev.kason.eightlakes.utils.*
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.entity.Guild

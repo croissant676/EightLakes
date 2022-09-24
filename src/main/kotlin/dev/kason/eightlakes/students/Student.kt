@@ -2,7 +2,6 @@ package dev.kason.eightlakes.students
 
 import com.typesafe.config.Config
 import dev.kason.eightlakes.*
-import dev.kason.eightlakes.utils.*
 import dev.kord.core.Kord
 import dev.kord.core.entity.Guild
 import freemarker.template.*
@@ -32,7 +31,6 @@ class Student(id: EntityID<Int>) : IntEntity(id) {
             bindSingleton { StudentService(di) }
             bindSingleton { VerificationService(di) }
             bindSingleton { createFreemarkerConfiguration() }
-            bindSingleton { RegistrationService(di) }
             bindEagerSingleton { StudentController(di).also { di.direct.instance<DiscordService>().controllers += (it) } }
         }
 

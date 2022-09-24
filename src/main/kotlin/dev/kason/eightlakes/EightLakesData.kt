@@ -4,7 +4,6 @@ import com.typesafe.config.Config
 import dev.kason.eightlakes.assignments.*
 import dev.kason.eightlakes.courses.*
 import dev.kason.eightlakes.students.*
-import dev.kason.eightlakes.utils.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.kodein.di.*

@@ -1,8 +1,8 @@
 package dev.kason.eightlakes.assignments
 
 import dev.kason.eightlakes.courses.*
+import dev.kason.eightlakes.snowflake
 import dev.kason.eightlakes.students.*
-import dev.kason.eightlakes.utils.snowflake
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.*
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime

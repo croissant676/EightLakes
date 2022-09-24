@@ -1,4 +1,4 @@
-package dev.kason.eightlakes.students
+package dev.kason.eightlakes.courses
 
 import org.kodein.di.*
 

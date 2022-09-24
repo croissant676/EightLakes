@@ -1,6 +1,6 @@
 package dev.kason.eightlakes.courses
 
-import dev.kason.eightlakes.utils.snowflake
+import dev.kason.eightlakes.snowflake
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.*
 
