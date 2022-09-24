@@ -1,8 +1,10 @@
 package dev.kason.eightlakes.courses
 
-import dev.kason.eightlakes.snowflake
+import com.typesafe.config.Config
+import dev.kason.eightlakes.*
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.*
+import org.kodein.di.*
 
 object Courses : IntIdTable("courses") {
     val courseName = varchar("course_name", 255)
@@ -13,6 +15,17 @@ object Courses : IntIdTable("courses") {
 
 class Course(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<Course>(Courses)
+    object Loader : ModuleProducer {
+        override suspend fun createModule(config: Config): DI.Module {
+            return DI.Module("course_module") {
+                bindSingleton { CourseService(di) }
+                bindSingleton { RegistrationService(di) }
+                bindSingleton { TeacherService(di) }
+                bindEagerSingleton { CourseController(di).addToService() }
+                bindEagerSingleton { TeacherController(di).addToService() }
+            }
+        }
+    }
 
     var courseName by Courses.courseName
     var courseLevel by Courses.courseLevel

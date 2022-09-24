@@ -31,7 +31,9 @@ class Student(id: EntityID<Int>) : IntEntity(id) {
             bindSingleton { StudentService(di) }
             bindSingleton { VerificationService(di) }
             bindSingleton { createFreemarkerConfiguration() }
-            bindEagerSingleton { StudentController(di).also { di.direct.instance<DiscordService>().controllers += (it) } }
+            bindEagerSingleton {
+                StudentController(di).addToService()
+            }
         }
 
         private fun createFreemarkerConfiguration() =

@@ -3,14 +3,21 @@
 package dev.kason.eightlakes
 
 import com.typesafe.config.Config
+import dev.kord.common.*
 import dev.kord.common.entity.Snowflake
-import dev.kord.core.entity.User
+import dev.kord.core.behavior.createRole
+import dev.kord.core.entity.*
+import dev.kord.rest.builder.role.RoleCreateBuilder
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.*
+import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.kodein.di.*
+import java.awt.Color as JColor
+import kotlin.random.Random as KRandom
 
-fun String.capitalize() = split(" ").joinToString {
+fun String.capitalized() = split(" ").joinToString {
     lowercase().replaceFirstChar { it.uppercase() }
 }
 
@@ -62,9 +69,42 @@ fun Int.ordinalString(): String {
     }
 }
 
+fun generateRandomColor(): Color {
+    val hue = KRandom.nextFloat()
+    val saturation = KRandom.nextDouble(0.1, 0.3).toFloat()
+    return Color(JColor.HSBtoRGB(hue, saturation, 0.9f))
+}
+
+// Discord
+
 val User.nameAndDiscriminator: String
     get() = username + discriminator
 
+suspend fun Guild.role(builder: RoleCreateBuilder.() -> Unit): Role {
+    val roleBuilder = RoleCreateBuilder().apply(builder)
+    val name = roleBuilder.name ?: throw IllegalArgumentException("Role name cannot be null.")
+    val existingRole: Role? = this.roles.firstOrNull { it.name == name }
+    return existingRole ?: createRole {
+        this.name = name
+        this.color = roleBuilder.color
+        this.hoist = roleBuilder.hoist
+        this.mentionable = roleBuilder.mentionable
+        this.permissions = roleBuilder.permissions
+        this.reason = roleBuilder.reason
+        this.icon = roleBuilder.icon
+        this.unicodeEmoji = roleBuilder.unicodeEmoji
+    }
+}
+
+interface DiscordEntityService<E : Entity<*>> {
+
+    suspend fun get(discordId: Snowflake): E
+
+    suspend fun getOrNull(discordId: Snowflake): E?
+
+}
+
+// DI
 
 interface ModuleProducer {
 
@@ -81,6 +121,8 @@ open class ConfigAware(
     val config: Config by lazy(LazyThreadSafetyMode.NONE) { di.direct.instance() }
 
 }
+
+// DB
 
 class SnowflakeColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()

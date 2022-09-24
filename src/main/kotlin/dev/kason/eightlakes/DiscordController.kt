@@ -1,9 +1,12 @@
 package dev.kason.eightlakes
 
+import dev.kord.common.entity.ButtonStyle
 import dev.kord.core.Kord
 import dev.kord.core.entity.Guild
 import dev.kord.core.entity.application.*
 import dev.kord.core.entity.interaction.*
+import dev.kord.core.event.interaction.*
+import dev.kord.rest.builder.component.*
 import dev.kord.rest.builder.interaction.*
 import org.kodein.di.*
 
@@ -19,7 +22,7 @@ abstract class DiscordController(override val di: DI) : ConfigAware(di) {
 
     protected val kord: Kord by lazy { di.direct.instance() }
     protected val guild: Guild by lazy { di.direct.instance() }
-    protected val discordService: DiscordService by lazy { di.direct.instance() }
+    val discordService: DiscordService by lazy { di.direct.instance() }
 
     abstract suspend fun loadCommands()
 
@@ -180,6 +183,37 @@ abstract class DiscordController(override val di: DI) : ConfigAware(di) {
         }
     }
 
-    // Utils
+    // button interaction
 
+    fun ActionRowBuilder.button(
+        style: ButtonStyle,
+        customId: String,
+        builder: ButtonBuilder.InteractionButtonBuilder.() -> Unit
+    ): ButtonBuilder.InteractionButtonBuilder {
+        val element = ButtonBuilder.InteractionButtonBuilder(style, customId).apply(builder)
+        components.add(element)
+        return element
+    }
+
+    fun ButtonBuilder.InteractionButtonBuilder.onExecute(block: suspend GuildButtonInteractionCreateEvent.() -> Unit) {
+        discordService.registerButtonInteraction(this.customId, block)
+    }
+
+    fun ActionRowBuilder.menu(
+        customId: String, builder: SelectMenuBuilder.() -> Unit
+    ): SelectMenuBuilder {
+        val element = SelectMenuBuilder(customId).apply(builder)
+        components.add(element)
+        return element
+    }
+
+    fun SelectMenuBuilder.onExecute(block: suspend GuildSelectMenuInteractionCreateEvent.() -> Unit) {
+        discordService.registerSelectMenuInteraction(this.customId, block)
+    }
+
+}
+
+fun <T : DiscordController> T.addToService(): T {
+    discordService.controllers += this
+    return this
 }

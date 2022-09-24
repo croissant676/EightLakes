@@ -3,7 +3,6 @@ package dev.kason.eightlakes.students
 import dev.kason.eightlakes.*
 import dev.kason.eightlakes.courses.*
 import dev.kord.common.entity.Snowflake
-import dev.kord.core.Kord
 import dev.kord.core.entity.*
 import dev.kord.rest.builder.message.EmbedBuilder
 import mu.KLogging
@@ -13,12 +12,11 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.kodein.di.*
 
 @Suppress("MemberVisibilityCanBePrivate")
-class StudentService(override val di: DI) : DIAware {
+class StudentService(override val di: DI) : DIAware, DiscordEntityService<Student> {
     companion object : KLogging()
 
     private val studentIdRegex = Regex("[A-Za-z]\\d{7}")
     private val verificationService: VerificationService by instance()
-    private val kord: Kord by instance()
     private val guild: Guild by instance()
 
     suspend fun signup(
@@ -31,10 +29,10 @@ class StudentService(override val di: DI) : DIAware {
         discordUser: User
     ): Student {
         require(studentId matches studentIdRegex) { "$studentId is not a valid id." }
-        val capitalizedId = studentId.capitalize()
-        val capitalizedFirst = firstName.capitalize()
-        val capitalizedMiddle = middleName?.capitalize()
-        val capitalizedLast = lastName.capitalize()
+        val capitalizedId = studentId.capitalized()
+        val capitalizedFirst = firstName.capitalized()
+        val capitalizedMiddle = middleName?.capitalized()
+        val capitalizedLast = lastName.capitalized()
         newSuspendedTransaction {
             require(uniqueName(capitalizedFirst, capitalizedMiddle, capitalizedLast)) {
                 "There is a student with the same name (first, middle, last) signed up already."
@@ -52,7 +50,7 @@ class StudentService(override val di: DI) : DIAware {
                 this.firstName = capitalizedFirst
                 this.middleName = capitalizedMiddle
                 this.lastName = capitalizedLast
-                this.preferredName = preferredName?.capitalize()
+                this.preferredName = preferredName?.capitalized()
                 this.studentId = capitalizedId
                 this.discordId = discordUser.id
                 this.birthday = birthday
@@ -87,11 +85,11 @@ class StudentService(override val di: DI) : DIAware {
         Students.discordId eq discordId
     )
 
-    suspend fun get(discordId: Snowflake): Student = requireNotNull(getOrNull(discordId)) {
+    override suspend fun get(discordId: Snowflake): Student = requireNotNull(getOrNull(discordId)) {
         "Student with discord id $discordId does not exist."
     }
 
-    suspend fun getOrNull(discordId: Snowflake): Student? =
+    override suspend fun getOrNull(discordId: Snowflake): Student? =
         newSuspendedTransaction {
             Student.find { Students.discordId eq discordId }.firstOrNull()
         }

@@ -18,9 +18,14 @@ typealias GuildUserCommandEvent = GuildUserCommandInteractionCreateEvent
 typealias GuildMessageCommandEvent = GuildMessageCommandInteractionCreateEvent
 typealias GuildAppCommandEvent = GuildApplicationCommandInteractionCreateEvent
 
-private typealias ExecutionMap<E> = HashMap<Snowflake, CommandExecution<E>>
-private typealias CommandExecution<T> = suspend T.() -> Unit
+private typealias ExecutionMap<E> = HashMap<Snowflake, Execution<E>>
+private typealias Execution<T> = suspend T.() -> Unit
 
+typealias GuildButtonEvent = GuildButtonInteractionCreateEvent
+typealias GuildMenuEvent = GuildSelectMenuInteractionCreateEvent
+typealias GuildComponentEvent = GuildComponentInteractionCreateEvent
+
+@Suppress("DuplicatedCode")
 class DiscordService(override val di: DI) : ConfigAware(di) {
     companion object : KLogging(), ModuleProducer {
         override suspend fun createModule(config: Config): DI.Module {
@@ -45,24 +50,29 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
     @Suppress("UNCHECKED_CAST")
     fun <E : GuildAppCommandEvent> registerCommand(
         command: GuildApplicationCommand,
-        execution: CommandExecution<E>
+        execution: Execution<E>
     ) {
         logger.debug { "Registered command ${command.name} of type ${command.type.value}." }
         when (command.type) {
             ApplicationCommandType.ChatInput -> chatInputExecutions[command.id] =
-                execution as CommandExecution<GuildChatInputEvent>
+                execution as Execution<GuildChatInputEvent>
             ApplicationCommandType.User -> userExecutions[command.id] =
-                execution as CommandExecution<GuildUserCommandEvent>
+                execution as Execution<GuildUserCommandEvent>
             ApplicationCommandType.Message -> messageExecutions[command.id] =
-                execution as CommandExecution<GuildMessageCommandEvent>
+                execution as Execution<GuildMessageCommandEvent>
             else -> error("Unknown application command type.")
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     suspend fun init() {
         if (allCommands.isEmpty()) loadCommandsFromKord()
         initControllers()
+        commandSystem()
+
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    suspend fun commandSystem() {
         kord.on<GuildAppCommandEvent> {
             if (interaction.applicationId != application.id) return@on
             val executionMap = when (interaction.invokedCommandType) {
@@ -71,10 +81,10 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
                 ApplicationCommandType.User -> userExecutions
                 else -> error("Unknown application command type.")
             } as ExecutionMap<GuildAppCommandEvent>
-            val execution: CommandExecution<GuildAppCommandEvent> = executionMap[interaction.invokedCommandId]
+            val execution: Execution<GuildAppCommandEvent> = executionMap[interaction.invokedCommandId]
                 ?: return@on logger.warn { "Unknown command ${interaction.invokedCommandName} of type of type ${interaction.invokedCommandType}." }
             val loggingPrefix =
-                "Interaction (${interaction.id}:${interaction.invokedCommandType}:${interaction.invokedCommandName}):"
+                "Command (${interaction.id}:${interaction.invokedCommandType}:${interaction.invokedCommandName}):"
             logger.debug { "$loggingPrefix Starting interaction execution." }
             try {
                 val time = measureTimeMillis {
@@ -125,8 +135,62 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
         }
     }
 
-    // Subcommand nesting
-
     internal val subCommandBuilderRegistry = mutableMapOf<String, DiscordController.ExecutionNesting>()
+
+    private val buttonExecutions = mutableMapOf<String, Execution<GuildButtonEvent>>()
+    private val selectMenuExecutions = mutableMapOf<String, Execution<GuildMenuEvent>>()
+
+    suspend fun componentInteractionSystem() {
+        kord.on<GuildButtonEvent> {
+            val execution = buttonExecutions[interaction.componentId]
+                ?: return@on logger.warn { "Unknown button interaction ${interaction.id}." }
+            val loggingPrefix = "Button (${interaction.id}):"
+            logger.debug { "$loggingPrefix Starting interaction execution." }
+            try {
+                val time = measureTimeMillis {
+                    execution(this)
+                }
+                logger.debug { "$loggingPrefix Finished interaction execution in $time ms." }
+            } catch (exception: Exception) {
+                logger.warn(exception) { "$loggingPrefix An exception occurred while intercepting execution." }
+                interaction.respondEphemeral {
+                    content = if (exception is IllegalStateException) "${Emojis.x} An internal server error occurred."
+                    else "${Emojis.x} ${exception.message}"
+                }
+            }
+        }
+        kord.on<GuildMenuEvent> {
+            val execution = selectMenuExecutions[interaction.componentId]
+                ?: return@on logger.warn { "Unknown select menu interaction ${interaction.id}." }
+            val loggingPrefix = "Menu (${interaction.id}):"
+            logger.debug { "$loggingPrefix Starting interaction execution." }
+            try {
+                val time = measureTimeMillis {
+                    execution(this)
+                }
+                logger.debug { "$loggingPrefix Finished interaction execution in $time ms." }
+            } catch (exception: Exception) {
+                logger.warn(exception) { "$loggingPrefix An exception occurred while intercepting execution." }
+                interaction.respondEphemeral {
+                    content = if (exception is IllegalStateException) "${Emojis.x} An internal server error occurred."
+                    else "${Emojis.x} ${exception.message}"
+                }
+            }
+        }
+    }
+
+    fun registerButtonInteraction(
+        id: String,
+        execution: Execution<GuildButtonEvent>
+    ) {
+        buttonExecutions[id] = execution
+    }
+
+    fun registerSelectMenuInteraction(
+        customId: String,
+        block: Execution<GuildMenuEvent>
+    ) {
+        selectMenuExecutions[customId] = block
+    }
 
 }

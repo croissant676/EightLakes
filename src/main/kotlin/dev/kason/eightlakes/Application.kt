@@ -1,6 +1,7 @@
 package dev.kason.eightlakes
 
 import com.typesafe.config.Config
+import dev.kason.eightlakes.courses.Course
 import dev.kason.eightlakes.students.Student
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
@@ -66,9 +67,10 @@ suspend fun main() {
     val config = loadApplicationConfig()
     val modules = setOf(
         EightLakesApp.createModule(config),
-        Student.Loader.createModule(config),
         DiscordService.createModule(config),
-        EightLakesData.createModule(config)
+        EightLakesData.createModule(config),
+        Student.Loader.createModule(config),
+        Course.Loader.createModule(config)
     )
     val di = DI {
         fullDescriptionOnError = true
