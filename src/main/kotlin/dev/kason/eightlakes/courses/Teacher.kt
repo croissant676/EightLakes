@@ -32,4 +32,4 @@ val Teacher.fullName: String
     }
 
 val Teacher.roleMention: String
-    get() = "<@${role}>"
+    get() = "<@&${role}>"

@@ -62,8 +62,6 @@ class TeacherController(override val di: DI) : DiscordController(di) {
                             "deleted-teacher-${teacher.id.value}-${Random.nextBytes(24).encodeBase64()}"
                         ) {
                             label = "Yes"
-                            style = ButtonStyle.Success
-                            customId = "yes"
                         }.onExecute {
                             teacherService.deleteTeacher(teacher)
                             (interactionResponse as FollowupPermittingInteractionResponseBehavior).createPublicFollowup {
@@ -76,8 +74,6 @@ class TeacherController(override val di: DI) : DiscordController(di) {
                             "keep-teacher-${teacher.id.value}-${Random.nextBytes(24).encodeBase64()}"
                         ) {
                             label = "No"
-                            style = ButtonStyle.Danger
-                            customId = "no"
                         }.onExecute {
                             (interactionResponse as FollowupPermittingInteractionResponseBehavior).createPublicFollowup {
                                 content = "${Emojis.whiteCheckMark} Teacher ${teacher.fullName} was not deleted."
