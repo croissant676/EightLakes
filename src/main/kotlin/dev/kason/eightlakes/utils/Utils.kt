@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package dev.kason.eightlakes.utils
 
 import dev.kord.core.entity.User

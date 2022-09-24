@@ -65,6 +65,9 @@ class StudentController(override val di: DI) : DiscordController(di) {
             val token by interaction.command.strings
             verificationService.close(token, interaction.user)
         }
+        chatInputCommand("verification", "Creates a new verification token.").onExecute {
+            verificationService.openAdditionalVerification(studentService.get(interaction.user.id))
+        }
         chatInputCommand("profile", "Displays the profile of a user") {
             user("user", "The user to display the profile of", NotRequired)
         }.onExecute {

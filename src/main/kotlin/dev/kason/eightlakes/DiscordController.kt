@@ -10,7 +10,7 @@ import org.kodein.di.*
 
 private typealias ChatInputExecution = suspend GuildChatInputEvent.() -> Unit
 
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate", "unused")
 abstract class DiscordController(override val di: DI) : ConfigAware(di) {
 
     companion object {

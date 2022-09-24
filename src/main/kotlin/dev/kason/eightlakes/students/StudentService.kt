@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.kodein.di.*
 
+@Suppress("MemberVisibilityCanBePrivate")
 class StudentService(override val di: DI) : DIAware {
     companion object : KLogging()
 
@@ -86,10 +87,9 @@ class StudentService(override val di: DI) : DIAware {
         Students.discordId eq discordId
     )
 
-    suspend fun get(discordId: Snowflake): Student =
-        newSuspendedTransaction {
-            Student.find { Students.discordId eq discordId }.first()
-        }
+    suspend fun get(discordId: Snowflake): Student = requireNotNull(getOrNull(discordId)) {
+        "Student with discord id $discordId does not exist."
+    }
 
     suspend fun getOrNull(discordId: Snowflake): Student? =
         newSuspendedTransaction {
