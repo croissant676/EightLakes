@@ -17,6 +17,11 @@ enum class Period {
     val ordinalString: String
         get() = number.ordinalString()
 
+    val next: Period?
+        get() = values().getOrNull(ordinal + 1)
+    val previous: Period?
+        get() = values().getOrNull(ordinal - 1)
+
     companion object {
 
         private val stringMap = buildMap {

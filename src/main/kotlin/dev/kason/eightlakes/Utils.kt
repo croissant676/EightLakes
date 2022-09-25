@@ -75,6 +75,28 @@ fun generateRandomColor(): Color {
     return Color(JColor.HSBtoRGB(hue, saturation, 0.9f))
 }
 
+fun IntArray.toByteArray(): ByteArray {
+    val bytes = ByteArray(size * 4)
+    for (i in indices) {
+        bytes[i * 4] = (this[i] ushr 24).toByte()
+        bytes[i * 4 + 1] = (this[i] ushr 16).toByte()
+        bytes[i * 4 + 2] = (this[i] ushr 8).toByte()
+        bytes[i * 4 + 3] = this[i].toByte()
+    }
+    return bytes
+}
+
+fun ByteArray.toIntArray(): IntArray {
+    val ints = IntArray(size / 4)
+    for (i in ints.indices) {
+        ints[i] = (this[i * 4].toInt() shl 24) or
+                (this[i * 4 + 1].toInt() shl 16) or
+                (this[i * 4 + 2].toInt() shl 8) or
+                this[i * 4 + 3].toInt()
+    }
+    return ints
+}
+
 // Discord
 
 val User.nameAndDiscriminator: String
@@ -145,3 +167,8 @@ class SnowflakeColumnType : ColumnType() {
 
 fun Table.snowflake(name: String): Column<Snowflake> =
     registerColumn(name, SnowflakeColumnType())
+
+// indicates that a function needs to be called within a transaction
+@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.PROPERTY, AnnotationTarget.FIELD, AnnotationTarget.FUNCTION)
+annotation class NeedsTransaction

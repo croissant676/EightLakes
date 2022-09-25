@@ -87,6 +87,8 @@ val Student.fullNameWithMiddleInitial: String
 // add preferred with parentheses if it exists
 val Student.fullNameWithPreferred: String
     get() = fullName + if (preferredName != null) " ($preferredName)" else ""
+val Student.fullNameWithPreferredAndMiddleInitial: String
+    get() = fullNameWithMiddleInitial + if (preferredName != null) " ($preferredName)" else ""
 
 suspend fun Kord.user(student: Student) = getUser(student.discordId)
 suspend fun Guild.member(student: Student) = getMember(student.discordId)

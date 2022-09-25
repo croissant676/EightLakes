@@ -86,8 +86,21 @@ class StudentService(override val di: DI) : DIAware, DiscordEntityService<Studen
     )
 
     override suspend fun get(discordId: Snowflake): Student = requireNotNull(getOrNull(discordId)) {
-        "Student with discord id $discordId does not exist."
+        "Student with discord id $discordId does not exist. "
     }
+
+    // suspend function to get a student by their discord id but
+    // if they are not found, ask them to sign up
+    suspend fun getOrSignup(discordId: Snowflake): Student {
+        val student = getOrNull(discordId)
+        if (student != null) return student
+        val message = "<@${discordId}> you are not signed up. Please sign up using the command `signup`."
+        throw IllegalArgumentException(message)
+    }
+
+    @NeedsTransaction
+    fun getTransactionless(discordId: Snowflake): Student? =
+        Student.find { Students.discordId eq discordId }.firstOrNull()
 
     override suspend fun getOrNull(discordId: Snowflake): Student? =
         newSuspendedTransaction {

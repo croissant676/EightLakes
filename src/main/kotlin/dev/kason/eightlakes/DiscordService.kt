@@ -3,12 +3,17 @@ package dev.kason.eightlakes
 import com.typesafe.config.Config
 import dev.kord.common.entity.*
 import dev.kord.core.*
+import dev.kord.core.behavior.*
+import dev.kord.core.behavior.channel.createTextChannel
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.entity.*
 import dev.kord.core.entity.application.GuildApplicationCommand
+import dev.kord.core.entity.channel.*
 import dev.kord.core.event.interaction.*
+import dev.kord.rest.builder.channel.*
 import dev.kord.x.emoji.Emojis
-import kotlinx.coroutines.flow.toSet
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.firstOrNull
 import mu.KLogging
 import org.kodein.di.*
 import kotlin.system.measureTimeMillis
@@ -37,6 +42,7 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
     }
 
     private val kord: Kord by di.instance()
+    private val guild: Guild by di.instance()
     private val application: Application by di.instance()
 
     private val chatInputExecutions = ExecutionMap<GuildChatInputEvent>()
@@ -191,6 +197,36 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
         block: Execution<GuildMenuEvent>
     ) {
         selectMenuExecutions[customId] = block
+    }
+
+    suspend fun textChannel(
+        name: String,
+        category: Category? = null,
+        block: TextChannelCreateBuilder.() -> Unit = {}
+    ): TextChannel {
+        if (category != null) {
+            val existingChannel = category.channels
+                .filterIsInstance<TextChannel>()
+                .firstOrNull { it.name == name }
+            if (existingChannel != null) return existingChannel
+            return category.createTextChannel(name, block)
+        }
+        val existingChannel = guild.channels
+            .filterIsInstance<TextChannel>()
+            .firstOrNull { it.name == name }
+        if (existingChannel != null) return existingChannel
+        return guild.createTextChannel(name, block)
+    }
+
+    suspend fun category(
+        name: String,
+        block: CategoryCreateBuilder.() -> Unit = {}
+    ): Category {
+        val existingCategory = guild.channels
+            .filterIsInstance<Category>()
+            .firstOrNull { it.name == name }
+        if (existingCategory != null) return existingCategory
+        return guild.createCategory(name, block)
     }
 
 }
