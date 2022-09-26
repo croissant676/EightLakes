@@ -8,6 +8,7 @@ import org.kodein.di.*
 
 object Courses : IntIdTable("courses") {
     val courseName = varchar("course_name", 255)
+    val courseCode = varchar("course_code", 255)
     val courseLevel = enumeration<CourseLevel>("course_level")
     val discordRole = snowflake("discord_role")
     val discordChannel = snowflake("discord_channel")
@@ -28,6 +29,7 @@ class Course(id: EntityID<Int>) : IntEntity(id) {
     }
 
     var courseName by Courses.courseName
+    var courseCode by Courses.courseCode
     var courseLevel by Courses.courseLevel
     var discordRole by Courses.discordRole
     var discordChannel by Courses.discordChannel

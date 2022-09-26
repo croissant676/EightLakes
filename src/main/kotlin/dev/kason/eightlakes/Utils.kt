@@ -126,6 +126,9 @@ interface DiscordEntityService<E : Entity<*>> {
 
 }
 
+suspend fun <T : Entity<*>> DiscordEntityService<T>.get(entity: KordEntity): T = get(entity.id)
+suspend fun <T : Entity<*>> DiscordEntityService<T>.getOrNull(entity: KordEntity): T? = getOrNull(entity.id)
+
 // DI
 
 interface ModuleProducer {

@@ -186,8 +186,8 @@ abstract class DiscordController(override val di: DI) : ConfigAware(di) {
     // button interaction
 
     fun ActionRowBuilder.button(
-        style: ButtonStyle,
         customId: String,
+        style: ButtonStyle = ButtonStyle.Primary,
         builder: ButtonBuilder.InteractionButtonBuilder.() -> Unit
     ): ButtonBuilder.InteractionButtonBuilder {
         val element = ButtonBuilder.InteractionButtonBuilder(style, customId).apply(builder)

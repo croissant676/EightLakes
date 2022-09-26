@@ -13,4 +13,5 @@ class RegistrationController(override val di: DI) : DiscordController(di) {
 
         }
     }
+
 }

@@ -84,7 +84,6 @@ val Student.fullName: String
 val Student.fullNameWithMiddleInitial: String
     get() = listOfNotNull(firstName, middleName?.let { "${it.first()}." }, lastName).joinToString(" ")
 
-// add preferred with parentheses if it exists
 val Student.fullNameWithPreferred: String
     get() = fullName + if (preferredName != null) " ($preferredName)" else ""
 val Student.fullNameWithPreferredAndMiddleInitial: String

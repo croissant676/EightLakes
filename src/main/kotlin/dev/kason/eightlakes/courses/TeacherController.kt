@@ -2,7 +2,8 @@ package dev.kason.eightlakes.courses
 
 import dev.kason.eightlakes.DiscordController
 import dev.kord.common.entity.ButtonStyle
-import dev.kord.core.behavior.interaction.response.*
+import dev.kord.core.behavior.interaction.respondPublic
+import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.rest.builder.interaction.*
 import dev.kord.rest.builder.message.modify.actionRow
 import dev.kord.x.emoji.Emojis
@@ -50,32 +51,29 @@ class TeacherController(override val di: DI) : DiscordController(di) {
                 }
                 // make sure that they actually want to delete it:
                 // there are course classes and students associated with this teacher
-                lateinit var interactionResponse: PublicInteractionResponseBehavior
-                // ^^ lateinit because we want to be able to access this response
-                // in the response callback.
-                interactionResponse = response.respond {
+                response.respond {
                     content =
                         "${Emojis.warning} There are course classes and students associated with this teacher. Are you sure you want to delete it?"
                     actionRow {
                         button(
-                            ButtonStyle.Danger,
-                            "deleted-teacher-${teacher.id.value}-${Random.nextBytes(24).encodeBase64()}"
+                            "deleted-teacher-${teacher.id.value}-${Random.nextBytes(24).encodeBase64()}",
+                            ButtonStyle.Danger
                         ) {
                             label = "Yes"
                         }.onExecute {
+                            val newResponse = interaction.deferPublicResponse()
                             teacherService.deleteTeacher(teacher)
-                            (interactionResponse as FollowupPermittingInteractionResponseBehavior).createPublicFollowup {
-                                content =
-                                    "${Emojis.whiteCheckMark} Deleted teacher ${teacher.fullName} and all classes and student registrations associated."
+                            newResponse.respond {
+                                content = "${Emojis.whiteCheckMark} Deleted teacher ${teacher.fullName}."
                             }
                         }
                         button(
-                            ButtonStyle.Secondary,
-                            "keep-teacher-${teacher.id.value}-${Random.nextBytes(24).encodeBase64()}"
+                            "keep-teacher-${teacher.id.value}-${Random.nextBytes(24).encodeBase64()}",
+                            ButtonStyle.Secondary
                         ) {
                             label = "No"
                         }.onExecute {
-                            (interactionResponse as FollowupPermittingInteractionResponseBehavior).createPublicFollowup {
+                            interaction.respondPublic {
                                 content = "${Emojis.whiteCheckMark} Teacher ${teacher.fullName} was not deleted."
                             }
                         }

@@ -74,7 +74,7 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
         if (allCommands.isEmpty()) loadCommandsFromKord()
         initControllers()
         commandSystem()
-
+        componentInteractionSystem()
     }
 
     @Suppress("UNCHECKED_CAST")
