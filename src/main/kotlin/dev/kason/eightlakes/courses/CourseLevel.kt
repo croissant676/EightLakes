@@ -1,5 +1,7 @@
 package dev.kason.eightlakes.courses
 
+import dev.kord.rest.builder.interaction.StringChoiceBuilder
+
 enum class CourseLevel {
     AP,
     KAP,
@@ -13,6 +15,14 @@ enum class CourseLevel {
             "AP" in courseName -> AP
             "Aca" in courseName -> Academic
             else -> Other
+        }
+
+        operator fun get(index: Int) = values()[index]
+
+        fun StringChoiceBuilder.addCourseLevelValues() {
+            values().forEach {
+                choice(it.name, it.ordinal.toString())
+            }
         }
 
     }

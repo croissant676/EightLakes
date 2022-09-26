@@ -63,7 +63,7 @@ class EightLakesApp(override val di: DI) : ConfigAware(di), CoroutineScope {
 val eightLakesLogger = KotlinLogging.logger("EightLakes")
 
 suspend fun main() {
-    eightLakesLogger.info { "Started appication; may take up to 20 seconds to load everything." }
+    eightLakesLogger.info { "Started application; may take up to 20 seconds to load everything." }
     val config = loadApplicationConfig()
     val modules = setOf(
         EightLakesApp.createModule(config),

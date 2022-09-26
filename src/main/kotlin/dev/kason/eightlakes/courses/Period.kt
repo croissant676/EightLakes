@@ -1,6 +1,7 @@
 package dev.kason.eightlakes.courses
 
 import dev.kason.eightlakes.ordinalString
+import dev.kord.rest.builder.interaction.StringChoiceBuilder
 
 enum class Period {
     First,
@@ -33,5 +34,12 @@ enum class Period {
         }
 
         fun parse(string: String): Period? = stringMap[string.lowercase()]
+
+        fun StringChoiceBuilder.addPeriodValues() {
+            values().forEach {
+                choice(it.ordinalString, it.number.toString())
+            }
+        }
+
     }
 }

@@ -99,7 +99,7 @@ abstract class DiscordController(override val di: DI) : ConfigAware(di) {
             discordService.subCommandBuilderRegistry.remove(name)
         }
         val chatInputCommand =
-            chatInputCommand(name, description, newBuilder)
+            kord.createGuildChatInputCommand(guild.id, name, description, newBuilder)
         chatInputCommand.onExecute(executionNesting.createChatInputExecution())
         return chatInputCommand
     }
@@ -130,7 +130,8 @@ abstract class DiscordController(override val di: DI) : ConfigAware(di) {
 
     context (ChatInputCreateBuilder)
     fun SubCommandBuilder.onExecute(block: ChatInputExecution) {
-        val currentExecutionNesting = discordService.subCommandBuilderRegistry[this@ChatInputCreateBuilder.name]!!
+        val currentExecutionNesting = discordService
+            .subCommandBuilderRegistry[this@ChatInputCreateBuilder.name]!!
         currentExecutionNesting.subCommand(this.name, block)
     }
 

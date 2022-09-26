@@ -28,7 +28,6 @@ private typealias Execution<T> = suspend T.() -> Unit
 
 typealias GuildButtonEvent = GuildButtonInteractionCreateEvent
 typealias GuildMenuEvent = GuildSelectMenuInteractionCreateEvent
-typealias GuildComponentEvent = GuildComponentInteractionCreateEvent
 
 @Suppress("DuplicatedCode")
 class DiscordService(override val di: DI) : ConfigAware(di) {
@@ -58,7 +57,7 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
         command: GuildApplicationCommand,
         execution: Execution<E>
     ) {
-        logger.debug { "Registered command ${command.name} of type ${command.type.value}." }
+        logger.debug { "Registered command \"${command.name}\" of type ${command.type.javaClass.simpleName}." }
         when (command.type) {
             ApplicationCommandType.ChatInput -> chatInputExecutions[command.id] =
                 execution as Execution<GuildChatInputEvent>
@@ -112,7 +111,7 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
         val guildApplicationCommands = guild.getApplicationCommands()
             .toSet()
             .filter {
-                it.applicationId != application.id
+                it.applicationId == application.id
             }
         allCommands += guildApplicationCommands
     }
@@ -146,7 +145,7 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
     private val buttonExecutions = mutableMapOf<String, Execution<GuildButtonEvent>>()
     private val selectMenuExecutions = mutableMapOf<String, Execution<GuildMenuEvent>>()
 
-    suspend fun componentInteractionSystem() {
+    private suspend fun componentInteractionSystem() {
         kord.on<GuildButtonEvent> {
             val execution = buttonExecutions[interaction.componentId]
                 ?: return@on logger.warn { "Unknown button interaction ${interaction.id}." }
