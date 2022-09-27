@@ -38,7 +38,8 @@ class EightLakesData(override val di: DI) : ConfigAware(di) {
         StudentClasses,
         Teachers,
         Assignments,
-        StudentAssignments
+        StudentAssignments,
+        Registrations
     )
 
     suspend fun init() {

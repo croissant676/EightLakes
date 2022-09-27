@@ -63,11 +63,12 @@ class VerificationService(override val di: DI) : ConfigAware(di) {
         return verification
     }
 
-    private suspend fun hasPreviousVerification(student: Student): Boolean = newSuspendedTransaction {
-        StudentVerification.find {
-            (StudentVerifications.student eq student.id) and (StudentVerifications.expirationDate greater CurrentDateTime)
-        }.count() > 0
-    }
+    private suspend fun hasPreviousVerification(student: Student): Boolean =
+        student.isVerified || newSuspendedTransaction {
+            StudentVerification.find {
+                (StudentVerifications.student eq student.id) and (StudentVerifications.expirationDate greater CurrentDateTime)
+            }.count() > 0
+        }
 
     suspend fun openAdditionalVerification(
         student: Student

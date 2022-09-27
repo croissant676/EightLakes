@@ -8,12 +8,13 @@ import dev.kord.core.entity.interaction.*
 import dev.kord.core.event.interaction.*
 import dev.kord.rest.builder.component.*
 import dev.kord.rest.builder.interaction.*
+import kotlinx.coroutines.delay
 import org.kodein.di.*
 
 private typealias ChatInputExecution = suspend GuildChatInputEvent.() -> Unit
 
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-abstract class DiscordController(override val di: DI) : ConfigAware(di) {
+abstract class DiscordController(override val di: DI) : DIAware {
 
     companion object {
         val Required: OptionsBuilder.() -> Unit = { required = true }
@@ -100,6 +101,7 @@ abstract class DiscordController(override val di: DI) : ConfigAware(di) {
         }
         val chatInputCommand =
             kord.createGuildChatInputCommand(guild.id, name, description, newBuilder)
+        delay(300) // avoid rate limit
         chatInputCommand.onExecute(executionNesting.createChatInputExecution())
         return chatInputCommand
     }

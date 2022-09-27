@@ -41,7 +41,7 @@ class ClassService(override val di: DI) : DIAware, DiscordEntityService<CourseCl
     override suspend fun get(discordId: Snowflake): CourseClass {
         return newSuspendedTransaction {
             CourseClass.find { CourseClasses.discordRole eq discordId }.firstOrNull()
-                ?: throw IllegalArgumentException("No class with id $discordId")
+                ?: throw IllegalArgumentException("No class with id <@&$discordId> found")
         }
     }
 

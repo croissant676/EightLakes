@@ -53,14 +53,21 @@ class TeacherController(override val di: DI) : DiscordController(di) {
                 // there are course classes and students associated with this teacher
                 response.respond {
                     content =
-                        "${Emojis.warning} There are course classes and students associated with this teacher. Are you sure you want to delete it?"
+                        "${Emojis.x} There are course classes and students associated with this teacher. Are you sure you want to delete it?"
                     actionRow {
+                        var used = false
                         button(
                             "deleted-teacher-${teacher.id.value}-${Random.nextBytes(24).encodeBase64()}",
                             ButtonStyle.Danger
                         ) {
                             label = "Yes"
                         }.onExecute {
+                            if (used) {
+                                interaction.respondPublic {
+                                    content = "${Emojis.x} This button has already been used."
+                                }
+                            }
+                            used = true
                             val newResponse = interaction.deferPublicResponse()
                             teacherService.deleteTeacher(teacher)
                             newResponse.respond {
@@ -73,6 +80,12 @@ class TeacherController(override val di: DI) : DiscordController(di) {
                         ) {
                             label = "No"
                         }.onExecute {
+                            if (used) {
+                                interaction.respondPublic {
+                                    content = "${Emojis.x} This button has already been used."
+                                }
+                            }
+                            used = true
                             interaction.respondPublic {
                                 content = "${Emojis.whiteCheckMark} Teacher ${teacher.fullName} was not deleted."
                             }

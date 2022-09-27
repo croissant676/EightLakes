@@ -2,6 +2,7 @@ package dev.kason.eightlakes.students
 
 import com.typesafe.config.Config
 import dev.kason.eightlakes.*
+import dev.kason.eightlakes.courses.*
 import dev.kord.core.Kord
 import dev.kord.core.entity.Guild
 import freemarker.template.*
@@ -54,6 +55,7 @@ class Student(id: EntityID<Int>) : IntEntity(id) {
     var isVerified by Students.verified
     var createdAt by Students.createdAt
 
+    val classes by StudentClass referrersOn StudentClasses.student
 }
 
 // Verifications

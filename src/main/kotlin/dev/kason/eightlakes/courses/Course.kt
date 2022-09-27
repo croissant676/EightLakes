@@ -36,4 +36,5 @@ class Course(id: EntityID<Int>) : IntEntity(id) {
     var courseLevel by Courses.courseLevel
     var discordRole by Courses.discordRole
     var discordChannel by Courses.discordChannel
+    val classes by CourseClass referrersOn CourseClasses.course
 }
