@@ -68,7 +68,7 @@ class RegistrationController(override val di: DI) : DiscordController(di) {
                 val response = interaction.deferEphemeralResponse()
                 val registration = registrationService.get(interaction.command.channels["registration"]!!.id)
                 newSuspendedTransaction {
-                    registration.delete()
+                    registrationService.deleteRegistration(registration, registration.student.discordId)
                 }
                 response.respond {
                     content = "${Emojis.whiteCheckMark} Registration closed."

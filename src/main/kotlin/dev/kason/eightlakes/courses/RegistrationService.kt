@@ -4,17 +4,13 @@ import dev.kason.eightlakes.*
 import dev.kason.eightlakes.students.*
 import dev.kord.common.entity.*
 import dev.kord.core.behavior.channel.*
-import dev.kord.core.behavior.interaction.response.edit
+import dev.kord.core.behavior.getChannelOf
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.builder.channel.*
-import dev.kord.rest.builder.message.EmbedBuilder
-import dev.kord.rest.builder.message.create.*
-import io.ktor.util.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.delay
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.kodein.di.*
-import kotlin.random.Random
 
 
 // Not supposed to be an actual controller,
@@ -26,11 +22,7 @@ class RegistrationService(override val di: DI) : DiscordController(di),
     private val classService: ClassService by instance()
 
     override suspend fun loadCommands() {
-        // No initialization; should be service.
-        val textChannel = guild.channels.filterIsInstance<TextChannel>().first()
-        textChannel.createMessage {
-            sendRegistrationEmbedMessage(0, fetch(0))
-        }
+        // No commands
     }
 
     suspend fun createRegistration(
@@ -47,7 +39,7 @@ class RegistrationService(override val di: DI) : DiscordController(di),
             val channel = discordService.textChannel(
                 "registration-${student.studentId}",
                 discordService.category("registrations") {
-                    this.name = "Registrations"
+                    this.name = "registrations"
                 }
             ) {
                 topic = "Registration for ${student.fullNameWithPreferredAndMiddleInitial}"
@@ -87,88 +79,38 @@ class RegistrationService(override val di: DI) : DiscordController(di),
                 "Please select the courses you would like to register for. Only select the classes that match your teacher."
         }
         val message = textChannel.createMessage {
-            sendRegistrationEmbedMessage(0, fetch(0))
+            with(classService) {
+                this@createMessage.courseDisplayEmbed()
+            }
         }
         message.pin()
-    }
-
-    private suspend fun EmbedBuilder.createCourseRegistrationEmbed(page: Int, list: List<Course>) {
-        title = "List of Courses"
-        newSuspendedTransaction {
-            for (item in list) {
-                val classes = item.classes.toList()
-                field {
-                    name = "${item.courseName} <#${item.discordChannel}>"
-                    value = classes.joinToString("\n") { " - <@&${it.discordRole}>" }.ifEmpty { " - No classes." }
-                }
-            }
-        }
-        color = generateRandomColor()
-        footer {
-            text = "Page ${page + 1} of ${list.size / 10 + 1}"
-        }
-    }
-
-    private suspend fun fetch(page: Int): List<Course> {
-        return newSuspendedTransaction {
-            Course.all().limit(10, (page * 10).toLong()).toList()
-        }
-    }
-
-    private suspend fun MessageCreateBuilder.sendRegistrationEmbedMessage(currentPage: Int, list: List<Course>) {
-        embed {
-            createCourseRegistrationEmbed(currentPage, list)
-        }
-        actionRow {
-            button("move-left-${Random.nextBytes(15).encodeBase64()}") {
-                label = "<- Previous"
-                disabled = (currentPage == 0)
-            }.onExecute {
-                val response = interaction.deferPublicMessageUpdate()
-                // do some calculations to get embed for currentPage - 1
-                val newList = fetch(currentPage - 1)
-                response.edit {
-                    sendRegistrationEmbedMessage(currentPage - 1, newList)
-                }
-            }
-            val rightButtonDisabled =
-                (list.size != 10) || (newSuspendedTransaction { CourseClass.all().count() } <= (currentPage + 1) * 10)
-            button("move-right-${Random.nextBytes(15).encodeBase64()}") {
-                label = "Next ->"
-                disabled = rightButtonDisabled
-            }.onExecute {
-                val response = interaction.deferPublicMessageUpdate()
-                val newList = fetch(currentPage + 1)
-                response.edit {
-                    sendRegistrationEmbedMessage(currentPage + 1, newList)
-                }
-            }
-        }
     }
 
     suspend fun addCourse(
         discordUser: Member,
         courseClassId: Snowflake
     ): Registration {
-        return newSuspendedTransaction {
-            val registration = getRegistration(discordUser)
-                ?: throw IllegalArgumentException("${discordUser.mention} you are not registered. Please register using the command `register`.")
-            val courseClass = classService.get(courseClassId)
-            registration += courseClass
-            val channel = guild.getChannel(registration.channel) as TextChannel
-            if (registration.isFinished) {
-                pushRegistration(registration)
-            }
-            registration
+        val registration = getRegistration(discordUser)
+            ?: throw IllegalArgumentException("${discordUser.mention} you are not registered. Please register using the command `register`.")
+        val courseClass = classService.get(courseClassId)
+        require(courseClass.period == registration.period) {
+            "${dev.kord.x.emoji.Emojis.x} Course class is not in the same period as the registration state"
         }
+        registration += courseClass
+        if (registration.isFinished) {
+            pushRegistration(registration)
+        }
+        return registration
     }
 
     @NeedsTransaction
     private suspend fun pushRegistration(registration: Registration): List<StudentClass> {
         check(registration.isFinished) { "Registration is not finished." }
         val result = mutableListOf<StudentClass>()
-        for (id in registration.classes) {
-            result += createStudentClass(registration.student, CourseClass[id])
+        newSuspendedTransaction {
+            for (id in registration.classes) {
+                result += createStudentClass(registration.student, CourseClass[id])
+            }
         }
         return result
     }
@@ -209,5 +151,15 @@ class RegistrationService(override val di: DI) : DiscordController(di),
         require(registration.channel == channel.id) {
             "You are not in the correct channel. Please go to <#${registration.channel}>."
         }
+    }
+
+    suspend fun deleteRegistration(registration: Registration, studentDiscordId: Snowflake) {
+        val channel = guild.getChannelOf<TextChannel>(registration.channel)
+        channel.createMessage {
+            content = "<@${studentDiscordId}> Deleting registration."
+        }
+        delay(1000)
+        registration.delete()
+        channel.delete()
     }
 }

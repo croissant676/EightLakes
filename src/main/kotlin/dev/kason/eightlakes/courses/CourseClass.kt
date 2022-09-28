@@ -42,3 +42,5 @@ class StudentClass(id: EntityID<Int>) : IntEntity(id) {
 
 val CourseClass.scheduleDescription: String
     get() = "${course.courseName} - ${teacher.fullName}"
+val CourseClass.roleName: String
+    get() = "${teacher.lastName}-${course.simpleName}-${period.ordinalString}"

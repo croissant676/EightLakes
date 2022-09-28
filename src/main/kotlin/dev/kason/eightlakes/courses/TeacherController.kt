@@ -15,6 +15,7 @@ class TeacherController(override val di: DI) : DiscordController(di) {
 
     private val teacherService: TeacherService by instance()
 
+    @Suppress("LABEL_NAME_CLASH")
     override suspend fun loadCommands() {
         parentCommand("teachers", "Edit, create, or modify teacher entities") {
             disableCommandInGuilds()
@@ -66,6 +67,7 @@ class TeacherController(override val di: DI) : DiscordController(di) {
                                 interaction.respondPublic {
                                     content = "${Emojis.x} This button has already been used."
                                 }
+                                return@onExecute
                             }
                             used = true
                             val newResponse = interaction.deferPublicResponse()
@@ -84,6 +86,7 @@ class TeacherController(override val di: DI) : DiscordController(di) {
                                 interaction.respondPublic {
                                     content = "${Emojis.x} This button has already been used."
                                 }
+                                return@onExecute
                             }
                             used = true
                             interaction.respondPublic {

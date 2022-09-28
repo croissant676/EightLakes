@@ -90,5 +90,4 @@ class CourseService(override val di: DI) : DIAware, DiscordEntityService<Course>
         }
     }
 
-
 }

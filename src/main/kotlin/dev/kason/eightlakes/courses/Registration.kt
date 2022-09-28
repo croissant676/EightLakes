@@ -2,7 +2,6 @@ package dev.kason.eightlakes.courses
 
 import dev.kason.eightlakes.*
 import dev.kason.eightlakes.students.*
-import dev.kord.x.emoji.Emojis
 import kotlinx.datetime.Clock
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.*
@@ -43,9 +42,6 @@ class Registration(id: EntityID<Int>) : IntEntity(id) {
         get() = !isPaused && startTimestamp + ExpirationDuration > Clock.System.now()
 
     suspend operator fun plusAssign(courseClass: CourseClass) = newSuspendedTransaction {
-        require(courseClass.period == period) {
-            "${Emojis.x} Course class is not in the same period as the registration state"
-        }
         classes[period.ordinal] = courseClass.id.value
         // convert classes into a byte array and set rawClasses to that
         // raw classes is size 28
