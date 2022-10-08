@@ -6,8 +6,10 @@ import com.typesafe.config.Config
 import dev.kord.common.*
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.createRole
+import dev.kord.core.behavior.interaction.response.*
 import dev.kord.core.entity.*
 import dev.kord.rest.builder.role.RoleCreateBuilder
+import dev.kord.x.emoji.Emojis
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.*
 import org.jetbrains.exposed.dao.Entity
@@ -175,3 +177,14 @@ fun Table.snowflake(name: String): Column<Snowflake> =
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.FIELD, AnnotationTarget.FUNCTION)
 annotation class NeedsTransaction
+
+suspend inline fun <reified T : DeferredMessageInteractionResponseBehavior> T.respondSafe(
+    block: T.() -> Unit
+) {
+    try {
+        block()
+    } catch (e: Exception) {
+        respond { content = "${Emojis.x} ${e.message}" }
+        eightLakesLogger.error(e) { "Error while responding to interaction." }
+    }
+}

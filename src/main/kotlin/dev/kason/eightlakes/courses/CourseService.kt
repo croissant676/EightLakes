@@ -90,4 +90,16 @@ class CourseService(override val di: DI) : DIAware, DiscordEntityService<Course>
         }
     }
 
+    suspend fun deleteCourse(course: Course) {
+        newSuspendedTransaction {
+            val classes = course.classes.toList()
+            classes.forEach {
+                guild.getRole(it.discordRole).delete("Course deleted")
+            }
+            val channel = guild.getChannel(course.discordChannel)
+            channel.delete("Course deleted")
+            course.delete()
+        }
+    }
+
 }

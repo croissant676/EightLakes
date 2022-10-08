@@ -1,11 +1,11 @@
 package dev.kason.eightlakes.courses
 
-import dev.kason.eightlakes.DiscordController
+import dev.kason.eightlakes.*
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.rest.builder.interaction.*
 import dev.kord.rest.builder.message.AllowedMentionsBuilder
 import dev.kord.x.emoji.Emojis
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.kodein.di.*
 
@@ -33,20 +33,24 @@ class RegistrationController(override val di: DI) : DiscordController(di) {
         }.onExecute {
             registrationService.ensureCorrectChannel(interaction.channel, interaction.user)
             val response = interaction.deferEphemeralResponse()
-            val roleClass = interaction.command.roles["class"]!!
-            val registration = registrationService.addCourse(interaction.user, roleClass.id)
-            if (registration.isFinished) {
-                response.respond {
-                    content = "${Emojis.whiteCheckMark} Registration completed! ${interaction.user.mention}"
+            response.respondSafe {
+                val roleClass = interaction.command.roles["class"]!!
+                val registration = registrationService.addCourse(interaction.user, roleClass.id)
+                if (registration.isFinished) {
+                    kord.launch {
+                        delay(2000)
+                        interaction.channel.delete("Registration completed")
+                    }
+                    response.respond {
+                        content = "${Emojis.whiteCheckMark} Registration completed! ${interaction.user.mention}"
+                    }
+                    return@onExecute
                 }
-                delay(2000)
-                interaction.channel.delete("Registration completed")
-                return@onExecute
-            }
-            response.respond {
-                content =
-                    "${Emojis.whiteCheckMark} Added ${roleClass.mention} to your registration. Your next period is ${registration.period.ordinalString} period."
-                allowedMentions = AllowedMentionsBuilder()
+                response.respond {
+                    content =
+                        "${Emojis.whiteCheckMark} Added ${roleClass.mention} to your registration. Your next period is ${registration.period.ordinalString} period."
+                    allowedMentions = AllowedMentionsBuilder()
+                }
             }
         }
         parentCommand("registrations", "Edit, create, or modify registration entities") {

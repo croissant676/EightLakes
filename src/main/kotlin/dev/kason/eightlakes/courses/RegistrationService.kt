@@ -8,7 +8,7 @@ import dev.kord.core.behavior.getChannelOf
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.builder.channel.*
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.kodein.di.*
 
@@ -28,39 +28,39 @@ class RegistrationService(override val di: DI) : DiscordController(di),
     suspend fun createRegistration(
         discordUser: Member
     ): Registration {
-        return newSuspendedTransaction {
-            val possibleRegistration = getRegistration(discordUser)
-            if (possibleRegistration != null) {
-                warn(possibleRegistration, discordUser.id)
-                return@newSuspendedTransaction possibleRegistration
+        val possibleRegistration = getRegistration(discordUser)
+        if (possibleRegistration != null) {
+            warn(possibleRegistration, discordUser.id)
+            return possibleRegistration
+        }
+        val student = studentService.getOrNull(discordUser.id)
+            ?: throw IllegalArgumentException("${discordUser.mention} you are not signed up. Please sign up using the command `signup`.")
+        val channel = discordService.textChannel(
+            "registration-${student.studentId}",
+            discordService.category("registrations") {
+                this.name = "registrations"
             }
-            val student = studentService.getTransactionless(discordUser.id)
-                ?: throw IllegalArgumentException("${discordUser.mention} you are not signed up. Please sign up using the command `signup`.")
-            val channel = discordService.textChannel(
-                "registration-${student.studentId}",
-                discordService.category("registrations") {
-                    this.name = "registrations"
-                }
-            ) {
-                topic = "Registration for ${student.fullNameWithPreferredAndMiddleInitial}"
-                addRoleOverwrite(guild.everyoneRole.id) {
-                    denied = Permissions(Permission.ViewChannel)
-                }
-                addMemberOverwrite(student.discordId) {
-                    allowed = Permissions(
-                        Permission.ViewChannel,
-                        Permission.SendMessages,
-                        Permission.ReadMessageHistory
-                    )
-                }
+        ) {
+            topic = "Registration for ${student.fullNameWithPreferredAndMiddleInitial}"
+            addRoleOverwrite(guild.everyoneRole.id) {
+                denied = Permissions(Permission.ViewChannel)
             }
-            val registration = Registration.new {
+            addMemberOverwrite(student.discordId) {
+                allowed = Permissions(
+                    Permission.ViewChannel,
+                    Permission.SendMessages,
+                    Permission.ReadMessageHistory
+                )
+            }
+        }
+        val registration = newSuspendedTransaction {
+            Registration.new {
                 this.student = student
                 this.channel = channel.id
             }
-            setup(channel, registration)
-            registration
         }
+        setup(channel, registration)
+        return registration
     }
 
     private suspend fun warn(registration: Registration, userId: Snowflake) {
@@ -70,20 +70,24 @@ class RegistrationService(override val di: DI) : DiscordController(di),
         }
     }
 
-    private suspend fun setup(textChannel: TextChannel, registration: Registration) {
-        textChannel.createMessage {
-            content = "Welcome to the registration process, ${registration.student.preferredOrFirst}!"
-        }
-        textChannel.createMessage {
-            content =
-                "Please select the courses you would like to register for. Only select the classes that match your teacher."
-        }
-        val message = textChannel.createMessage {
-            with(classService) {
-                this@createMessage.courseDisplayEmbed()
+    private suspend fun setup(textChannel: TextChannel, registration: Registration) = coroutineScope {
+        launch(Dispatchers.IO) {
+            newSuspendedTransaction {
+                textChannel.createMessage {
+                    content = "Welcome to the registration process, ${registration.student.preferredOrFirst}!"
+                }
             }
+            textChannel.createMessage {
+                content =
+                    "Please select the courses you would like to register for. Only select the classes that match your teacher."
+            }
+            val message = textChannel.createMessage {
+                with(classService) {
+                    this@createMessage.courseDisplayEmbed()
+                }
+            }
+            message.pin()
         }
-        message.pin()
     }
 
     suspend fun addCourse(
@@ -97,10 +101,28 @@ class RegistrationService(override val di: DI) : DiscordController(di),
             "${dev.kord.x.emoji.Emojis.x} Course class is not in the same period as the registration state"
         }
         registration += courseClass
-        if (registration.isFinished) {
-            pushRegistration(registration)
+        if (registration.isFinished) withContext(Dispatchers.IO) {
+            launch {
+                pushRegistration(registration)
+                addRoles(registration, discordUser)
+            }
         }
         return registration
+    }
+
+    private suspend fun addRoles(registration: Registration, discordUser: Member) = newSuspendedTransaction {
+        val classes = getCourseClasses(registration)
+        for (courseClass in classes) {
+            discordUser.addRole(courseClass.discordRole)
+            discordUser.addRole(courseClass.course.discordRole)
+            courseClass.teacher.role?.let { discordUser.addRole(it) }
+            // transaction in case course and teacher aren't loaded
+        }
+    }
+
+    @NeedsTransaction
+    private fun getCourseClasses(registration: Registration): Set<CourseClass> {
+        return registration.classes.map { CourseClass[it] }.toSet()
     }
 
     @NeedsTransaction
@@ -158,8 +180,12 @@ class RegistrationService(override val di: DI) : DiscordController(di),
         channel.createMessage {
             content = "<@${studentDiscordId}> Deleting registration."
         }
-        delay(1000)
-        registration.delete()
-        channel.delete()
+        coroutineScope {
+            launch(Dispatchers.IO) {
+                delay(3000)
+                registration.delete()
+                channel.delete()
+            }
+        }
     }
 }

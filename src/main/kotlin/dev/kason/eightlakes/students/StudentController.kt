@@ -1,6 +1,6 @@
 package dev.kason.eightlakes.students
 
-import dev.kason.eightlakes.DiscordController
+import dev.kason.eightlakes.*
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.rest.builder.interaction.*
 import dev.kord.rest.builder.message.modify.embed
@@ -33,29 +33,31 @@ class StudentController(override val di: DI) : DiscordController(di) {
         }.onExecute {
             // any database transaction may take a while, so it's better to defer it.
             val response = interaction.deferEphemeralResponse()
-            val strings = interaction.command.strings
-            val first by strings
-            val middle = strings["middle"]
-            val preferred = strings["preferred"]
-            val last by strings
-            val id by strings
-            val birthday by strings
-            val discordUser = interaction.user
-            val student = studentService.signup(
-                first,
-                middle,
-                last,
-                preferred,
-                id,
-                birthday,
-                discordUser
-            )
-            response.respond {
-                content = """
+            response.respondSafe {
+                val strings = interaction.command.strings
+                val first by strings
+                val middle = strings["middle"]
+                val preferred = strings["preferred"]
+                val last by strings
+                val id by strings
+                val birthday by strings
+                val discordUser = interaction.user
+                val student = studentService.signup(
+                    first,
+                    middle,
+                    last,
+                    preferred,
+                    id,
+                    birthday,
+                    discordUser
+                )
+                response.respond {
+                    content = """
                     ${Emojis.whiteCheckMark} You've been signed up! 
                     Check your school email `${student.email}` for a verification code.
                     Then, run `/verify <code>` to verify your account.
                 """.trimIndent()
+                }
             }
         }
         chatInputCommand("verify", "Verifies your account with a token") {

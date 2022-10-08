@@ -205,14 +205,14 @@ class DiscordService(override val di: DI) : ConfigAware(di) {
     ): TextChannel {
         if (category != null) {
             val existingChannel = category.channels
-                .filterIsInstance<TextChannel>()
-                .firstOrNull { it.name == name }
+                .filter { it.type == ChannelType.GuildText }
+                .firstOrNull { it.name == name } as? TextChannel?
             if (existingChannel != null) return existingChannel
             return category.createTextChannel(name, block)
         }
         val existingChannel = guild.channels
-            .filterIsInstance<TextChannel>()
-            .firstOrNull { it.name == name }
+            .filter { it.type == ChannelType.GuildText }
+            .firstOrNull { it.name == name } as? TextChannel?
         if (existingChannel != null) return existingChannel
         return guild.createTextChannel(name, block)
     }

@@ -62,6 +62,32 @@ class CourseController(override val di: DI) : DiscordController(di) {
                     allowedMentions = AllowedMentionsBuilder()
                 }
             }
+            subCommand("delete", "Delete the selected course") {
+                channel("course", "The course to delete", Required)
+            }.onExecute {
+                val response = interaction.deferPublicResponse()
+                val channel = interaction.command.channels["course"]!!
+                val course = courseService.get(channel.id)
+                courseService.deleteCourse(course)
+                response.respond {
+                    content = "${Emojis.whiteCheckMark} Successfully deleted course `${course.courseName}`."
+                    allowedMentions = AllowedMentionsBuilder()
+                }
+            }
+        }
+        chatInputCommand("view-courses", "View all courses") {
+
+        }.onExecute {
+            val response = interaction.deferPublicResponse()
+            val courses = courseService.getAll()
+            response.respond {
+                content = courses.joinToString("\n") { course ->
+                    "**${course.courseName}** (level: ${course.courseLevel})\n" +
+                            "Role: <@&${course.discordRole}>\n" +
+                            "Channel: <#${course.discordChannel}>"
+                }
+                allowedMentions = AllowedMentionsBuilder()
+            }
         }
     }
 
